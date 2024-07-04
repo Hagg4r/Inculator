@@ -113,7 +113,7 @@ def main():
         "sqlmap": ["sqlmap", "--url", link_with_https],
         "whois": ["whois", link],
         "nikto": ["nikto", "-h", link],
-        "uniscan": ["uniscan", "-u", link "-qd"],
+        "uniscan": ["uniscan", "-u", link, "-qd"],
         "nmap": ["nmap", link],
     }
 
@@ -134,10 +134,12 @@ def main():
 
     # Execute additional SQLMap commands to retrieve database information
     additional_sqlmap_commands = [
-        f"sqlmap -u {link_with_https} --dbs
-            additional_sqlmap_commands = [
         f"sqlmap -u {link_with_https} --dbs",
         # These commands need to be executed after retrieving the database and table names
+        # f"sqlmap -u {link_with_https} -D <nome_del_database> --tables",
+        # f"sqlmap -u {link_with_https} -D <nome_del_database> -T <nome_della_tabella> --columns",
+        # f"sqlmap -u {link
+                # These commands need to be executed after retrieving the database and table names
         # f"sqlmap -u {link_with_https} -D <nome_del_database> --tables",
         # f"sqlmap -u {link_with_https} -D <nome_del_database> -T <nome_della_tabella> --columns",
         # f"sqlmap -u {link_with_https} -D <nome_del_database> -T <nome_della_tabella> --dump"

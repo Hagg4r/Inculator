@@ -5,12 +5,12 @@ from requests.exceptions import RequestException, SSLError
 
 def run_command(command):
     """Run a command and return its output."""
-    result = subprocess.run(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+    result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
     return result.stdout, result.stderr
 
 def run_sudo_command(command):
     """Run a command with sudo and return its output."""
-    result = subprocess.run(f"sudo {command}", shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+    result = subprocess.run(['sudo'] + command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
     return result.stdout, result.stderr
 
 def save_to_file(filepath, data):
@@ -33,7 +33,7 @@ def install_tools():
         print(f"Checking if {tool} is installed...")
         if not is_tool_installed(tool):
             print(f"{tool} not found. Installing {tool}...")
-            stdout, stderr = run_sudo_command(install_command)
+            stdout, stderr = run_sudo_command(install_command.split())
             if stdout:
                 print(stdout)
             if stderr:
@@ -123,58 +123,34 @@ def main():
     os.makedirs(target_dir, exist_ok=True)
     output_file = os.path.join(target_dir, "domain.txt")
     
-    # Clear the file if it exists
+        # Clear the file if it exists
     open(output_file, 'w').close()
-    
+
     tools = {
-        "subfinder": f"sudo subfinder -d {link} -o {output_file}",
-        "sqlmap": f"sqlmap --url {link_with_https}",
-        "whois": f"whois {link}",
-        "nikto": f"nikto -h {link}",
-        "uniscan": f"uniscan -u {link} -qd",
-               "nmap": f"nmap {link}",
+        "subfinder": f"subfinder -d {link} -o {output_file}",
+        "sqlmap": f"sqlmap -u {link_with_https} --batch --level=5 --risk=3",
+        "uniscan": f"uniscan -u {link_with_https} -qweds",
+        "nmap": f"nmap -sS -sV {link}",
+        "nikto": f"nikto -h {link_with_https}",
+        "whois": f"whois {link}"
     }
-
-    total_tools = len(tools)
     
-    for i, (tool_name, command) in enumerate(tools.items(), 1):
-        print(f"Esecuzione di {tool_name} ({i}/{total_tools})...")
-        stdout, stderr = run_command(command)
-        save_to_file(output_file, f"=== Risultati {tool_name} ===\n")
-        if stdout:
-            save_to_file(output_file, stdout)
-        if stderr:
-            save_to_file(output_file, f"Errori:\n{stderr}")
+    # Execute each tool
+    for tool, command in tools.items():
+        print(f"Running {tool}...")
+        stdout, stderr = run_command(command.split())
         
-        # Calculate and print the progress
-        progress = (i / total_tools) * 100
-        print(f"Progresso: {progress:.2f}%")
-
-    # Execute additional SQLMap commands to retrieve database information
-    additional_sqlmap_commands = [
-        f"sqlmap -u {link_with_https} --dbs",
-        f"sqlmap -u {link_with_https} --tables -D your_database_name",
-        f"sqlmap -u {link_with_https} --columns -D your_database_name -T your_table_name",
-        f"sqlmap -u {link_with_https} --dump -D your_database_name -T your_table_name"
-    ]
+        if stdout:
+            save_to_file(output_file, f"Output of {tool}:\n{stdout}")
+        if stderr:
+            save_to_file(output_file, f"Errors from {tool}:\n{stderr}")
     
-    for i, command in enumerate(additional_sqlmap_commands, 1):
-        print(f"Esecuzione di comando SQLMap {i}: {command}")
-        stdout, stderr = run_command(command)
-        save_to_file(output_file, f"=== Risultati SQLMap ===\n")
-        if stdout:
-            save_to_file(output_file, stdout)
-        if stderr:
-            save_to_file(output_file, f"Errori:\n{stderr}")
-        
-        # Calculate and print the progress
-        progress = ((i + total_tools) / (total_tools + len(additional_sqlmap_commands))) * 100
-        print(f"Progresso: {progress:.2f}%")
-
-    # Perform SQL Injection with additional payloads
+    # Perform SQL injection
+    print("Performing SQL Injection tests...")
     perform_sql_injection(link_with_https)
-
-    print("Analisi completata. I risultati sono stati salvati in:", output_file)
+    
+    print(f"All tasks completed. Results saved in {output_file}")
 
 if __name__ == "__main__":
     main()
+    

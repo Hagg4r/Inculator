@@ -134,30 +134,90 @@ def main():
     print_header()
 
     target_url = input("Enter the URL of the website to check: ")
-    target_url = f
+     target_url = input("Enter the URL of the website to check: ").strip()
     
-        # Ensure the URL starts with 'http://' or 'https://'
+    # Ensure the URL starts with 'http://' or 'https://'
     if not target_url.startswith(('http://', 'https://')):
         target_url = 'http://' + target_url
 
     # Check if the website is accessible
     if check_website_status(target_url):
         print("Starting SQL Injection test...")
-        if perform_sql_injection(target_url):
+        
+        # Perform SQL Injection tests and determine if the site is vulnerable
+        is_vulnerable = perform_sql_injection(target_url)
+        if is_vulnerable:
             print("The website is vulnerable to SQL Injection.")
         else:
             print("The website is not vulnerable to SQL Injection.")
+        
+        # Proceed with further tools and scanning
+        install_tools()  # Install necessary tools if not already installed
+        clear_screen()  # Clear the screen after installation
+
+        # Print the header
+        print_header()
+
+        # Set up file paths for saving results
+        desktop_path = os.path.join(os.path.expanduser("~"), "Desktop")
+        target_dir = os.path.join(desktop_path, target_url)
+        os.makedirs(target_dir, exist_ok=True)
+        output_file = os.path.join(target_dir, "domain.txt")
+
+        # Clear the file if it exists
+        open(output_file, 'w').close()
+
+        tools = {
+            "subfinder": ["sudo", "subfinder", "-d", target_url, "-o", output_file],
+            "sqlmap": ["sqlmap", "--url", target_url],
+            "whois": ["whois", target_url],
+            "nikto": ["nikto", "-h", target_url],
+            "uniscan": ["uniscan", "-u", target_url, "-qd"],
+            "nmap": ["nmap", target_url],
+        }
+
+        total_tools = len(tools)
+
+        for i, (tool_name, command) in enumerate(tools.items(), 1):
+            print(f"Running {tool_name} ({i}/{total_tools})...")
+            stdout, stderr = run_command(command)
+            save_to_file(output_file, f"=== {tool_name} Results ===\n")
+            if stdout:
+                save_to_file(output_file, stdout)
+            if stderr:
+                save_to_file(output_file, f"Errors:\n{stderr}")
+
+            # Calculate and print the progress
+            progress = (i / total_tools) * 100
+            print(f"Progress: {progress:.2f}%")
+
+        # Execute additional SQLMap commands to retrieve database information
+        additional_sqlmap_commands = [
+            f"sqlmap -u {target_url} --dbs",
+            f"sqlmap -u {target_url} --tables -D your_database_name",
+            f"sqlmap -u {target_url} --columns -D your_database_name -T your_table_name",
+            f"sqlmap -u {target_url} --dump -D your_database_name -T your_table_name"
+        ]
+
+        for command in additional_sqlmap_commands:
+            print(f"Executing SQLMap command: {command}")
+            stdout, stderr = run_command(command.split())
+            save_to_file(output_file, f"=== SQLMap Results ===\n")
+            if stdout:
+                save_to_file(output_file, stdout)
+            if stderr:
+                save_to_file(output_file, f"Errors:\n{stderr}")
+
+            # Calculate and print the progress
+            progress = ((i + len(additional_sqlmap_commands)) / (total_tools + len(additional_sqlmap_commands))) * 100
+            print(f"Progress: {progress:.2f}%")
+
+        print("Analysis complete. Results saved to:", output_file)
     else:
         print("Cannot proceed with SQL Injection tests as the website is not accessible.")
 
 if __name__ == "__main__":
     main()
-
-
-
-
-
-
 
 
 

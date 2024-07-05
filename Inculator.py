@@ -118,14 +118,14 @@ def perform_sql_injection(target_url):
                 print(f"Payload: {payload} - Response: {response.text}")  # This will display the extracted data
         except SSLError as e:
             print(f"SSL Error: {e}")
-                except RequestException as e:
+        except RequestException as e:
             print(f"Request Error: {e}")
 
 def main():
     # Print the header
     print_header()
-
-    # Get target URL from the user
+    
+        # Get target URL from the user
     target_url = input("Enter the URL of the website to check: ").strip()
     
     # Create a directory for storing results
@@ -155,6 +155,7 @@ def main():
         print("Running uniscan...")
         stdout, stderr = run_command(["uniscan", "-u", target_url, "-qweds"])
         save_to_file(uniscan_file, stdout)
+        save_to_file(uniscan_file, "Scan by Haggar")
         if stderr:
             save_to_file(uniscan_file, "Uniscan errors:")
             save_to_file(uniscan_file, stderr)
@@ -163,6 +164,7 @@ def main():
         print("Running nmap scan...")
         stdout, stderr = run_command(["nmap", "-sS", "-sV", "-T4", target_url])
         save_to_file(nmap_file, stdout)
+        save_to_file(nmap_file, "Scan by Haggar")
         if stderr:
             save_to_file(nmap_file, "Nmap errors:")
             save_to_file(nmap_file, stderr)
@@ -171,12 +173,24 @@ def main():
         print("Running whois lookup...")
         stdout, stderr = run_command(["whois", target_url])
         save_to_file(whois_file, stdout)
+        save_to_file(whois_file, "Scan by Haggar")
         if stderr:
             save_to_file(whois_file, "Whois errors:")
             save_to_file(whois_file, stderr)
         
+        # Run subfinder
+        print("Running subfinder...")
+        stdout, stderr = run_command(["subfinder", "-d", target_url])
+        save_to_file(subfinder_file, stdout)
+        save_to_file(subfinder_file, "Scan by Haggar")
+        if stderr:
+            save_to_file(subfinder_file, "Subfinder errors:")
+            save_to_file(subfinder_file, stderr)
+        
+        print(f"All results have been saved to the {results_dir} directory")
 
 if __name__ == "__main__":
     install_tools()
     clear_screen()
     main()
+    

@@ -118,14 +118,10 @@ def perform_sql_injection(target_url):
                 print(f"Payload: {payload} - Response: {response.text}")  # This will display the extracted data
         except SSLError as e:
             print(f"SSL Error: {e}")
-        except RequestException as e:
+                except RequestException as e:
             print(f"Request Error: {e}")
 
 def main():
-    # Print the header
-    print_header()
-
-    def main():
     # Print the header
     print_header()
 

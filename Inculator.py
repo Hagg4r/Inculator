@@ -62,7 +62,7 @@ def print_header():
  |         'i::i  i         'i:';°      /                `;::\           /.'´      _         ';/' ‘         /.'´      _         ';/' ‘          /                `;::\         '`;        ,– .,        'i:'/   
  ';        ;'::/¯/;        ';:;‘'    ,'                   '`,::;       ,:     ,:'´::;'`·.,_.·'´.,    ‘    ,:     ,:'´::;'`·.,_.·'´.,    ‘     ,'                   '`,::;         i       i':/:::';       ;/'    
  'i        i':/_/:';        ;:';°   i'       ,';´'`;         '\:::', ‘  /     /':::::/;::::_::::::::;‘    /     /':::::/;::::_::::::::;‘     i'       ,';´'`;         '\:::', ‘     i       i/:·'´       ,:''      
-  ;       i·´   '`·;       ;:/°  ,'        ;' /´:`';         ';:::'i‘,'     ;':::::'/·´¯     ¯'`·;:::¦‘ ,'     ;':::::'/·´¯     ¯'`·;:::¦‘  ,'        ;' /´:`';         ';:::'i‘     '; '    ,:,     ~;'´:::'`:,   
+  ;       i·´   '`·;       ;:/°  ,'        ;' /´:`';         ';:::'i‘,'     ;':::::'/·´¯     ¯'`·;:::¦‘ ,'     ;':::::'/·´¯     ¯'`;:';‘  ,'        ;' /´:`';         ';:::'i‘,'     ;':::::'/·´¯     ¯'`·;:::¦‘ ,'     ;':::::'/·´¯     ¯'`·;:::¦‘  ,'        ;' /´:`';         ';:::'i‘     '; '    ,:,     ~;'´:::'`:,   
   ';      ;·,  '  ,·;      ;/'    ;        ;/:;::;:';         ',:::;'i     ';::::::'\             ';:';‘ 'i     ';::::::'\             ';:';‘  ;        ;/:;::;:';         ',:::;     'i      i:/\       `;::::/:'`;'
    ';    ';/ '`'*'´  ';    ';/' '‘  'i        '´        `'         'i::'/ ;      '`·:;:::::`'*;:'´      |/'   ;      '`·:;:::::`'*;:'´      |/'  'i        '´        `'         'i::'/      ;     ;/   \       '`:/::::/'
     \   /          '\   '/'      ¦       '/`' *^~-·'´\         ';'/'‚  \          '`*^*'´         /'  ‘   \          '`*^*'´         /'  ‘ ¦       '/`' *^~-·'´\         ';'/'‚      ';   ,'       \         '`;/' 
@@ -124,8 +124,8 @@ def perform_sql_injection(target_url, results_dir):
                 file.write(f"Response: {response.text}\n")
             print(f"Saved SQL Injection results to {output_file}")
             file_count += 1         
-            except SSLError as e:
-            output_file = os.path.join(results_dir, f'sql_injection_{file_count}.txt')
+        except SSLError as e:
+            output_file =output_file = os.path.join(results_dir, f'sql_injection_{file_count}.txt')
             with open(output_file, 'w') as file:
                 file.write(f"Payload: {payload}\n")
                 file.write(f"SSL Error: {e}\n")
@@ -139,83 +139,65 @@ def perform_sql_injection(target_url, results_dir):
             print(f"Saved SQL Injection error to {output_file}")
             file_count += 1
 
-def create_results_directory():
-    """Create a directory for saving results on the Desktop."""
-    desktop_path = os.path.join(os.path.expanduser("~"), "Desktop")
-    results_dir = os.path.join(desktop_path, "Inculator_Results_" + datetime.now().strftime("%Y%m%d_%H%M%S"))
+def perform_scan(target_url, results_dir):
+    """Perform a scan on the target URL."""
+    results_file = os.path.join(results_dir, "scan_results.txt")
     
-    if not os.path.exists(results_dir):
-        os.makedirs(results_dir)
+    # Run uniscan
+    print("Running uniscan...")
+    stdout, stderr = run_command(["uniscan", "-u", target_url, "-qweds"])
+    save_to_file(results_file, "Uniscan output:")
+    save_to_file(results_file, stdout)
+    if stderr:
+        save_to_file(results_file, "Uniscan errors:")
+        save_to_file(results_file, stderr)
     
-    return results_dir
+    # Run nmap scan
+    print("Running nmap scan...")
+    stdout, stderr = run_command(["nmap", "-sS", "-sV", "-T4", target_url])
+    save_to_file(results_file, "Nmap output:")
+    save_to_file(results_file, stdout)
+    if stderr:
+        save_to_file(results_file, "Nmap errors:")
+        save_to_file(results_file, stderr)
+    
+    # Run whois lookup
+    print("Running whois lookup...")
+    stdout, stderr = run_command(["whois", target_url])
+    save_to_file(results_file, "Whois output:")
+    save_to_file(results_file, stdout)
+    if stderr:
+        save_to_file(results_file, "Whois errors:")
+        save_to_file(results_file, stderr)
+    
+    # Run subfinder
+    print("Running subfinder...")
+    stdout, stderr = run_command(["subfinder", "-d", target_url])
+    save_to_file(results_file, "Subfinder output:")
+    save_to_file(results_file, stdout)
+    if stderr:
+        save_to_file(results_file, "Subfinder errors:")
+        save_to_file(results_file, stderr)
+    
+    # Append a message indicating the end of the scan
+    with open(results_file, 'a') as file:
+        file.write("\nScan completed by Haggar\n")
+    
+    print(f"All results have been saved to {results_file}")
 
 def main():
-    # Create results directory on Desktop
-    results_dir = create_results_directory()
-
-    # Print the header
-    print_header()
-
-    # Get target URL from the user
-    target_url = input("Enter the URL of the website to check: ").strip()
+    target_url = input("Enter the target URL: ")
+    results_dir = "results"
+    os.makedirs(results_dir, exist_ok=True)
     
-    # Check if the target URL is accessible
     if check_website_status(target_url):
-        # Perform SQL Injection tests
-        print("Performing SQL Injection tests...")
         perform_sql_injection(target_url, results_dir)
-        
-        # Save results to a file
-        results_file = os.path.join(results_dir, 'scan_results.txt')
-        print(f"Saving results to {results_file}...")
-        save_to_file(results_file, "SQL Injection test results:")
-        save_to_file(results_file, f"Target URL: {target_url}")
-        
-        # Run uniscan
-        print("Running uniscan...")
-        stdout, stderr = run_command(["uniscan", "-u", target_url, "-qweds"])
-        save_to_file(results_file, "Uniscan output:")
-        save_to_file(results_file, stdout)
-        if stderr:
-            save_to_file(results_file, "Uniscan errors:")
-            save_to_file(results_file, stderr)
-        
-        # Run nmap scan
-        print("Running nmap scan...")
-        stdout, stderr = run_command(["nmap", "-sS", "-sV", "-T4", target_url])
-        save_to_file(results_file, "Nmap output:")
-        save_to_file(results_file, stdout)
-        if stderr:
-            save_to_file(results_file, "Nmap errors:")
-            save_to_file(results_file, stderr)
-        
-        # Run whois lookup
-        print("Running whois lookup...")
-        stdout, stderr = run_command(["whois", target_url])
-        save_to_file(results_file, "Whois output:")
-        save_to_file(results_file, stdout)
-        if stderr:
-            save_to_file(results_file, "Whois errors:")
-            save_to_file(results_file, stderr)
-        
-        # Run subfinder
-        print("Running subfinder...")
-        stdout, stderr = run_command(["subfinder", "-d", target_url])
-        save_to_file(results_file, "Subfinder output:")
-        save_to_file(results_file, stdout)
-        if stderr:
-            save_to_file(results_file, "Subfinder errors:")
-            save_to_file(results_file, stderr)
-        
-        # Append a message indicating the end of the scan
-        with open(results_file, 'a') as file:
-            file.write("\nScan completed by Haggar\n")
-        
-        print(f"All results have been saved to {results_file}")
+        perform_scan(target_url, results_dir)
+    else:
+        print("The website is not accessible. Aborting scan.")
 
 if __name__ == "__main__":
     install_tools()
     clear_screen()
+    print_header()
     main()
-    
-       

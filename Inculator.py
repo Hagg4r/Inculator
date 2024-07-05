@@ -124,8 +124,12 @@ def perform_sql_injection(target_url):
 def main():
     # Print the header
     print_header()
-    
-        # Get target URL from the user
+
+    def main():
+    # Print the header
+    print_header()
+
+    # Get target URL from the user
     target_url = input("Enter the URL of the website to check: ").strip()
     
     # Create a directory for storing results
@@ -193,4 +197,3 @@ if __name__ == "__main__":
     install_tools()
     clear_screen()
     main()
-    

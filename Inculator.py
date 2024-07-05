@@ -175,15 +175,6 @@ def main():
             save_to_file(whois_file, "Whois errors:")
             save_to_file(whois_file, stderr)
         
-        # Run subfinder
-        print("Running subfinder...")
-        stdout, stderr = run_command(["subfinder", "-d", target_url])
-        save_to_file(subfinder_file, stdout)
-        if stderr:
-            save_to_file(subfinder_file, "Subfinder errors:")
-            save_to_file(subfinder_file, stderr)
-        
-        print(f"All results have been saved to the {results_dir} directory")
 
 if __name__ == "__main__":
     install_tools()

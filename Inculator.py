@@ -24,7 +24,6 @@ def install_tools():
         "uniscan": ["sudo", "apt-get", "install", "-y", "uniscan"],
         "nmap": ["sudo", "apt-get", "install", "-y", "nmap"],
         "sqlmap": ["sudo", "apt-get", "install", "-y", "sqlmap"],
-        "nikto": ["sudo", "apt-get", "install", "-y", "nikto"],
         "whois": ["sudo", "apt-get", "install", "-y", "whois"],
         "subfinder": ["sudo", "apt-get", "install", "-y", "subfinder"]
     }
@@ -126,9 +125,25 @@ def main():
     # Print the header
     print_header()
 
+    def main():
+    # Print the header
+    print_header()
+
     # Get target URL from the user
     target_url = input("Enter the URL of the website to check: ").strip()
     
+    # Create a directory for storing results
+    results_dir = 'scan_results'
+    if not os.path.exists(results_dir):
+        os.makedirs(results_dir)
+    
+    # Define result file paths
+    results_file = os.path.join(results_dir, 'results.txt')
+    uniscan_file = os.path.join(results_dir, 'uniscan_output.txt')
+    nmap_file = os.path.join(results_dir, 'nmap_output.txt')
+    whois_file = os.path.join(results_dir, 'whois_output.txt')
+    subfinder_file = os.path.join(results_dir, 'subfinder_output.txt')
+
     # Check if the target URL is accessible
     if check_website_status(target_url):
         # Perform SQL Injection tests
@@ -136,7 +151,6 @@ def main():
         perform_sql_injection(target_url)
         
         # Save results to a file
-        results_file = 'results.txt'
         print(f"Saving results to {results_file}...")
         save_to_file(results_file, "SQL Injection test results:")
         save_to_file(results_file, f"Target URL: {target_url}")
@@ -144,49 +158,36 @@ def main():
         # Run uniscan
         print("Running uniscan...")
         stdout, stderr = run_command(["uniscan", "-u", target_url, "-qweds"])
-        save_to_file(results_file, "Uniscan output:")
-        save_to_file(results_file, stdout)
+        save_to_file(uniscan_file, stdout)
         if stderr:
-            save_to_file(results_file, "Uniscan errors:")
-            save_to_file(results_file, stderr)
+            save_to_file(uniscan_file, "Uniscan errors:")
+            save_to_file(uniscan_file, stderr)
         
         # Run nmap scan
         print("Running nmap scan...")
         stdout, stderr = run_command(["nmap", "-sS", "-sV", "-T4", target_url])
-        save_to_file(results_file, "Nmap output:")
-        save_to_file(results_file, stdout)
+        save_to_file(nmap_file, stdout)
         if stderr:
-            save_to_file(results_file, "Nmap errors:")
-            save_to_file(results_file, stderr)
-        
-        # Run nikto scan
-        print("Running nikto scan...")
-        stdout, stderr = run_command(["nikto", "-h", target_url])
-        save_to_file(results_file, "Nikto output:")
-        save_to_file(results_file, stdout)
-        if stderr:
-            save_to_file(results_file, "Nikto errors:")
-            save_to_file(results_file, stderr)
+            save_to_file(nmap_file, "Nmap errors:")
+            save_to_file(nmap_file, stderr)
         
         # Run whois lookup
         print("Running whois lookup...")
         stdout, stderr = run_command(["whois", target_url])
-        save_to_file(results_file, "Whois output:")
-        save_to_file(results_file, stdout)
+        save_to_file(whois_file, stdout)
         if stderr:
-            save_to_file(results_file, "Whois errors:")
-            save_to_file(results_file, stderr)
+            save_to_file(whois_file, "Whois errors:")
+            save_to_file(whois_file, stderr)
         
         # Run subfinder
         print("Running subfinder...")
         stdout, stderr = run_command(["subfinder", "-d", target_url])
-        save_to_file(results_file, "Subfinder output:")
-        save_to_file(results_file, stdout)
+        save_to_file(subfinder_file, stdout)
         if stderr:
-            save_to_file(results_file, "Subfinder errors:")
-            save_to_file(results_file, stderr)
+            save_to_file(subfinder_file, "Subfinder errors:")
+            save_to_file(subfinder_file, stderr)
         
-        print(f"All results have been saved to {results_file}")
+        print(f"All results have been saved to the {results_dir} directory")
 
 if __name__ == "__main__":
     install_tools()

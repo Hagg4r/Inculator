@@ -77,7 +77,7 @@ def print_header():
     for i in range(len(colors)):
         sys.stdout.write("\r" + colors[i] + header)
         sys.stdout.flush()
-        time.sleep(0.1)
+        time.sleep(0.5)
     print("\033[0m")  # Reset color to default
 
 def check_website_status(url):
@@ -121,7 +121,7 @@ def perform_sql_injection(target_url, results_dir):
     for payload in payloads:
         data = {
             'username': f'admin{payload}',
-            'password': 'password'  # Update with the correct password field if needed
+            'password': 'admin'  # Update with the correct password field if needed
         }
 
         try:
@@ -137,15 +137,17 @@ def perform_sql_injection(target_url, results_dir):
 def perform_ftp_scan(target_url, results_dir):
     """Perform an FTP scan on the target URL."""
     global file_count  # Declare file_count as global
-    command = ["nmap", "-p", "21", "--script", "ftp-anon,ftp-bounce,ftp-libopie,ftp-proftpd-backdoor,ftp-vsftpd-backdoor,ftp-vuln-cve2010-4221", target_url]
+    command = ["nmap", "-p", "21", "--script", "ftp-anon,ftp-bounce,ftp-libopie,ftp    -proftpd-backdoor,ftp-vsftpd-backdoor,ftp-vuln-cve2010-4221", target_url]
     
     try:
-        stdout,stderr = run_command(command)
-    output_fileoutput_file = os.path.join(results_dir, f'ftp_scan_{file_count}.txt')
-    with open(output_file, 'w') as file:
-        file.write(stdout)
-    print(f"Saved FTP scan results to {output_file}")
-    file_count += 1
+        stdout, stderr = run_command(command)
+        output_file = os.path.join(results_dir, f'ftp_scan_{file_count}.txt')
+        with open(output_file, 'w') as file:
+            file.write(stdout)
+        print(f"Saved FTP scan results to {output_file}")
+        file_count += 1
+    except Exception as e:
+        print(f"An error occurred during FTP scan: {e}")
 
 def main():
     # Ask for the target URL

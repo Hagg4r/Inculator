@@ -1,4 +1,4 @@
-print("by Hagg4r 👺")
+print("Hagg4r 🫵👺")
 import os
 import subprocess
 import requests
@@ -68,9 +68,8 @@ def print_header():
  ;         ';:';  ;         ';:;        ,'´          '`:;::`,              /;:· '´ ¯¯  `' ·-:::/'            /;:· '´ ¯¯  `' ·-:::/'            ,'´          '`:;::`,        '\                       '`;::'i‘  
  |         'i::i  i         'i:';°      /                `;::\           /.'´      _         '`;/' ‘         /.'´      _         ';/' ‘          /                `;::\         i       i':/:::';       ,:'           `;:::';       ,:'           `;:::';         i       i':/:::';    
  'i        i':/_/:';        ;:';°   i'       ,';´'`;         '\:::', ‘  /     /':::::/;::::_::::::::;‘    /     /':::::/;::::_::::::::;‘     i'       ,';´'`;         '\:::', ‘     i       i/:·'´       ,:''      
-  ;       i·´   '`·;       ;:/°  ,'        ;' /´:`';         ';:::'i‘,'     ;':::::'/·´¯     ¯'`·;:::¦‘ ,'     ;':::::'/·´¯`·;:::¦‘  ,'        ;' /´:`';         ';:::'i‘,'     ;':::::'/·´¯     ¯'`·;:::¦‘  ,'        ;' /´:`';         ';:::'i‘     '; '    ,:,     ~;'´:::'`:,   
-  ';      ;·,  '  ,·;      ;/'    ;        ;/:;::;:';         ',:::;'i     ';::::::'\             ';:';‘ 'i     ';::::::'\             ';:';‘  ;        ;/:;::;:';         ',:::;     'i      i:/\       `;::::/:'`;'
-   ';    ';/ '`'*'´  ';    ';/' '‘  'i        '´        `'         'i::'/ ;      '`·:;:::::`'*;:'´      |/'   ;      '`·:;:::::`'*;:'´      |/'  'i        '´        `'         'i::'/      ;     ;/   \       '`:/::::/'
+  ;       i·´   '`·;       ;:/°  ,'        ;' /´:`';         ';:::'i‘,'     ;':::::'/·´¯     ¯'`·;:::¦‘ ,'     ;':::::'/·´¯`·;:::¦‘`;  ,'        ;' /´:`';         ';:::'i‘     '; '    ,:,     ~;'´:::'`:,   
+  ';    ';/ '`'*'´  ';    ';/' '‘  'i        '´        `'         'i::'/ ;      '`·:;:::::`'*;:'´      |/'   ;      '`·:;:::::`'*;:'´      |/'  'i        '´        `'         'i::'/      ;     ;/   \       '`:/::::/'
     \   /          '\   '/'      ¦       '/`' *^~-·'´\         ';'/'‚  \          '`*^*'´         /'  ‘   \          '`*^*'´         /'  ‘ ¦       '/`' *^~-·'´\         ';'/'‚      ';   ,'       \         '`;/ 
      '`'´             `''´   '    '`., .·´              `·.,_,.·´  ‚    `·.,               ,.-·´          `·.,               ,.-·´      '`., .·´              `·.,_,.·´  ‚       `'*´          '`~·-·^'´    
                       '                                                    '`*^~·~^*'´                     '`*^~·~^*'´                                                                                
@@ -132,7 +131,7 @@ def perform_sql_injection(target_url, results_dir):
                 file.write(response.text)
             print(f"Saved SQL Injection results to {output_file}")
             file_count += 1
-                Exception as e:
+        except Exception as e:
             print(f"An error occurred during SQL Injection attempt: {e}")
 
 def perform_ftp_scan(target_url, results_dir):
@@ -141,46 +140,34 @@ def perform_ftp_scan(target_url, results_dir):
     command = ["nmap", "-p", "21", "--script", "ftp-anon,ftp-bounce,ftp-libopie,ftp-proftpd-backdoor,ftp-vsftpd-backdoor,ftp-vuln-cve2010-4221", target_url]
     
     try:
-        stdout, stderr = run_command(command)
-        output_file = os.path.join(results_dir, f'ftp_scan_{file_count}.txt')
-        with open(output_file, 'w') as file:
-            file.write(stdout)
-            if stderr:
-                file.write("\nErrors:\n")
-                file.write(stderr)
-        print(f"Saved FTP scan results to {output_file}")
-        file_count += 1
-    except Exception as e:
-        print(f"An error occurred during FTP scan: {e}")
+        stdout,stderr = run_command(command)
+    output_file = os.path.join(results_dir, f'ftp_scan_{file_count}.txt')
+    with open(output_file, 'w') as file:
+        file.write(stdout)
+    print(f"Saved FTP scan results to {output_file}")
+    file_count += 1
 
 def main():
-    clear_screen()
-    print_header()
-    
-    # Install necessary tools
-    install_tools()
-    
     # Ask for the target URL
     target_url = input("Enter the target URL: ")
-    
+
     # Check if the website is accessible
     if not check_website_status(target_url):
-        print("Exiting the script due to inaccessible target URL.")
+        print("The website is not accessible.")
         return
-    
+
     # Create a directory to save the results
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     results_dir = os.path.join(os.getcwd(), f"scan_results_{timestamp}")
     os.makedirs(results_dir, exist_ok=True)
-    
+
     # Perform SQL Injection scan
     perform_sql_injection(target_url, results_dir)
-    
+
     # Perform FTP scan
     perform_ftp_scan(target_url, results_dir)
-    
+
     print("Scan completed.")
 
 if __name__ == "__main__":
     main()
-

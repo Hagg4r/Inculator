@@ -68,7 +68,7 @@ def print_header():
  ;         ';:';  ;         ';:;        ,'´          '`:;::`,              /;:· '´ ¯¯  `' ·-:::/'            /;:· '´ ¯¯  `' ·-:::/'            ,'´          '`:;::`,        '\                       '`;::'i‘  
  |         'i::i  i         'i:';°      /                `;::\           /.'´      _         '`;/' ‘         /.'´      _         ';/' ‘          /                `;::\         i       i':/:::';       ,:'           `;:::';       ,:'           `;:::';         i       i':/:::';    
  'i        i':/_/:';        ;:';°   i'       ,';´'`;         '\:::', ‘  /     /':::::/;::::_::::::::;‘    /     /':::::/;::::_::::::::;‘     i'       ,';´'`;         '\:::', ‘     i       i/:·'´       ,:''      
-  ;       i·´   '`·;       ;:/°  ,'        ;' /´:`';         ';:::'i‘,'     ;':::::'/·´¯     ¯'`·;:::¦‘ ,'     ;':::::'/·´¯`·;:::¦‘`;  ,'        ;' /´`;         ';:::'i‘     '; '    ,:,     ~;'´:::'`:,   
+  ;       i·´   '`·;       ;:/°  ,'        ;' /´:`';         ';:::'i‘,'     ;':::::'/·´¯     ¯'`·;:::¦‘ ,'     ;':::::'/·´¯`·;:::¦‘`;  ,'`;      ,'        ;' /´:`';         ';:::'i‘     '; '    ,:,     ~;'´:::'`:,   
   ';    ';/ '`'*'´  ';    ';/' '‘  'i        '´        `'         'i::'/ ;      '`·:;:::::`'*;:'´      |/'   ;      '`·:;:::::`'*;:'´      |/'  'i        '´        `'         'i::'/      ;     ;/   \       '`:/::::/'
     \   /          '\   '/'      ¦       '/`' *^~-·'´\         ';'/'‚  \          '`*^*'´         /'  ‘   \          '`*^*'´         /'  ‘ ¦       '/`' *^~-·'´\         ';'/'‚      ';   ,'       \         '`;/ 
      '`'´             `''´   '    '`., .·´              `·.,_,.·´  ‚    `·.,               ,.-·´          `·.,               ,.-·´      '`., .·´              `·.,_,.·´  ‚       `'*´          '`~·-·^'´    
@@ -136,11 +136,11 @@ def perform_sql_injection(target_url, results_dir):
 
 def perform_ftp_scan(target_url, results_dir):
     """Perform an FTP scan on the target URL."""
-        global file_count  # Declare file_count as global
+    global file_count  # Declare file_count as global
     command = ["nmap", "-p", "21", "--script", "ftp-anon,ftp-bounce,ftp-libopie,ftp-proftpd-backdoor,ftp-vsftpd-backdoor,ftp-vuln-cve2010-4221", target_url]
     
     try:
-        stdout, stderr = run_command(command)
+        stdout,stdout, stderr = run_command(command)
         output_file = os.path.join(results_dir, f'ftp_scan_{file_count}.txt')
         with open(output_file, 'w') as file:
             file.write(stdout)
@@ -149,69 +149,21 @@ def perform_ftp_scan(target_url, results_dir):
     except Exception as e:
         print(f"An error occurred during FTP scan: {e}")
 
-def get_database_credentials():
-    """Prompt user for database credentials."""
-    host = input("Enter the database host: ")
-    user = input("Enter the database user: ")
-    password = input("Enter the database password: ")
-    db = input("Enter the database name: ")
-    return host, user, password, db
-
-def get_user_data(host, user, password, db):
-    """Fetch user data from the database."""
-    try:
-        # Connect to the database
-        connection = pymysql.connect(
-            host=host,
-            user=user,
-            password=password,
-            db=db
-        )
-
-        cursor = connection.cursor()
-
-        # Execute a query to fetch user data
-        cursor.execute("SELECT id, name, email FROM users")
-
-        # Print the results
-        result = cursor.fetchall()
-        for row in result:
-            print(f"ID: {row[0]}, Name: {row[1]}, Email: {row[2]}")
-    
-    except pymysql.MySQLError as e:
-        print(f"Error: {e}")
-    
-    finally:
-        if connection:
-            connection.close()
-
 def main():
-    # Ask for the target URL
-    target_url = input("Enter the target URL: ")
+    target_url = "http://example.com"  # Replace with the target URL
+    results_dir = "results"  # Replace with the desired results directory
 
-    # Check if the website is accessible
-    if not check_website_status(target_url):
-        print("The website is not accessible.")
-        return
+    if not os.path.exists(results_dir):
+        os.makedirs(results_dir)
 
-    # Get database credentials from the user
-    host, user, password, db = get_database_credentials()
+    print_header()
+    clear_screen()
 
-    # Fetch user data from the database
-    get_user_data(host, user, password, db)
-
-    # Create a directory to save the results
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    results_dir = os.path.join(os.getcwd(), f"scan_results_{timestamp}")
-    os.makedirs(results_dir, exist_ok=True)
-
-    # Perform SQL Injection scan
-    perform_sql_injection(target_url, results_dir)
-
-    # Perform FTP scan
-    perform_ftp_scan(target_url, results_dir)
-
-    print("Scan completed.")
+    if check_website_status(target_url):
+        perform_sql_injection(target_url, results_dir)
+        perform_ftp_scan(target_url, results_dir)
+    else:
+        print("The website is not accessible. Exiting.")
 
 if __name__ == "__main__":
     main()

@@ -83,7 +83,7 @@ def get_ip_info(ip):
 
 def scan_with_uniscan(target):
     """Run Uniscan on the target."""
-    command = ["uniscan", "-u", target, "-qweds"]
+    command = ["uniscan", "-u", target]
     stdout, stderr = run_command(command)
     save_to_file("uniscan_results.txt", stdout)
     if stderr:
@@ -92,7 +92,7 @@ def scan_with_uniscan(target):
 
 def scan_with_nmap(target):
     """Run Nmap on the target."""
-    command = ["nmap", "-sV", target]
+    command = ["nmap", target]
     stdout, stderr = run_command(command)
     save_to_file("nmap_results.txt", stdout)
     if stderr:
@@ -112,7 +112,7 @@ def extract_files_from_db(target):
     """Extract files from a database using SQLMap."""
     # Adjust the command to specify the file extraction options
     command = [
-        "sqlmap", "-u", target, "--batch", "--dump", "--output-dir=output",
+        "sqlmap", "-u", target, "--batch", "--database", "--output-dir=output",
         "--technique=BEUSTQ", "--files"  # Modify options based on what you need
     ]
     stdout, stderr = run_command(command)

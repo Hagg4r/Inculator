@@ -1,5 +1,4 @@
-Here's the corrected and rewritten code:
-```
+
 import os
 import subprocess
 import requests

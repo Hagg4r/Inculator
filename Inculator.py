@@ -69,8 +69,12 @@ def print_header():
  |         'i::i  i         'i:';°      /                `;::\           /.'´      _         '`;/' ‘         /.'´      _         ';/' ‘          /                `;::\         i       i':/:::';       ,:'        
  'i        i':/_/:';        ;:';°   i'       ,';´'`;         '\:::', ‘  /     /':::::/;::::_::::::::;‘    /     /':::::/;::::_::::::::;‘     i'       ,';´'`;         '\:::', ‘     i       i/:·'´       ,:'      
   ;       i·´   '`·;       ;:/°  ,'        ;' /´:`';         ';:::'i‘,'     ;':::::'/·´¯     ¯'`·;:::¦‘ ,'     ;':::::'/·´¯`·;:::¦‘`;   ,'        ,;::/'`·.,_'     
-   'i     i         i';   ,'´             ,:/'¯/'`·:':::';'      \::'·´,'::':,'        ;:::::/´  ;          ;:::::/´   i'::':/´  ;            ;:::::/´   ;::'`·:,'/'`·.   
-    ;   ;'        ;'   ,'´  ,'´  ;'´  `;::'/´  ;             ,'`·:'       'i:::;     ;':::::/´  ;'            ;':::::/´    ';:::;´  ;              ;':::::/´    ;::::/´'`·,'´':,
+   'i     i         i';   ,'´             ,:/'¯/'`·:':::';'      \::'·´,'::':,'        ;:::::/´  ;          ;:::::/´   i'::':/´  ;            ;:::::/´    ;::::/´'`·,'´':,
+   """
+
+    for color in colors:
+        print(color + header)
+        time.sleep(0.5)
 
 def get_ip_info(ip):
     """Get IP information using an external service."""
@@ -140,7 +144,12 @@ def log_to_database(host, user, password, db, data):
         print(f"Error logging to database: {e}")
 
 def main():
-    "Main function to orchestrate the scans."
+    """
+    Main function to orchestrate the scans.
+    - Installs required tools.
+    - Runs Uniscan, Nmap, SQLMap, Whois, and Subfinder on the target.
+    - Retrieves IP information and logs the results to a file and database.
+    """
     clear_screen()
     print_header()
     
@@ -179,11 +188,16 @@ def main():
     db_password = "password"
     db_name = "scan_results_db"
     
-     log_to_database(db_host, db_user, db_password, db_name, nmap_stdout)
-    log_to_database(db_host, db_user, db_password, db_name, sqlmap_stdout)
-    log_to_database(db_host, db_user, db_password, db_name, whois_stdout)
-    log_to_database(db_host, db_user, db_password, db_name, subfinder_stdout)
-    log_to_database(db_host, db_user, db_password, db_name, str(ip_info))
-    
+    # Log results to the database
+    try:
+        log_to_database(db_host, db_user, db_password, db_name, uniscan_stdout)
+        log_to_database(db_host, db_user, db_password, db_name, nmap_stdout)
+        log_to_database(db_host, db_user, db_password, db_name, sqlmap_stdout)
+        log_to_database(db_host, db_user, db_password, db_name, whois_stdout)
+        log_to_database(db_host, db_user, db_password, db_name, subfinder_stdout)
+        log_to_database(db_host, db_user, db_password, db_name, str(ip_info))
+    except Exception as e:
+        print(f"An error occurred while logging to the database: {e}")
+
 if __name__ == "__main__":
     main()

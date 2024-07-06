@@ -1,4 +1,6 @@
-print("by haggar")
+print("by Hagg4r 👺")
+Here is the modified code with the added functionality to perform an FTP scan after the SQL injection scan:
+```
 import os
 import subprocess
 import requests
@@ -62,13 +64,19 @@ def print_header():
     """Print the animated header 'hagg4rscan'."""
     colors = ['\033[91m', '\033[93m', '\033[92m', '\033[94m', '\033[95m', '\033[96m']
     header = """
-     __     __   __     ______     __  __     __         ______     ______   ______     ______       
-/\ \   /\ "-.\ \   /\  ___\   /\ \/\ \   /\ \       /\  __ \   /\__  _\ /\  __ \   /\  == \      
-\ \ \  \ \ \-.  \  \ \ \____  \ \ \_\ \  \ \ \____  \ \  __ \  \/_/\ \/ \ \ \/\ \  \ \  __<      
- \ \_\  \ \_\\"\_\  \ \_____\  \ \_____\  \ \_____\  \ \_\ \_\    \ \_\  \ \_____\  \ \_\ \_\    
-  \/_/   \/_/ \/_/   \/_____/   \/_____/   \/_____/   \/_/\/_/     \/_/   \/_____/   \/_/ /_/    
-                                                                                                 
-    """ 
+    ,:'/¯/`:,       .·/¯/`:,'                ,.-:~:-.                             __'                              __'                          ,.-:~:-.                .:'/*/'`:,·:~·–:.,           
+  /:/_/::::/';    /:/_/::::';             /':::::::::'`,                    ,.·:'´::::::::`'·-.                ,.·:'´::::::::`'·-.                 /':::::::::'`,             /::/:/:::/:::;::::::/`':.,'     
+ /:'     '`:/::;  /·´    `·,::';          /;:-·~·-:;':::',                 '/::::::::::::::::::';             '/::::::::::::::::::';              /;:-·~·-:;':::',          /·*'`·´¯'`^·-~·:–-'::;:::'`;    
+ ;         ';:';  ;         ';:;        ,'´          '`:;::`,              /;:· '´ ¯¯  `' ·-:::/'            /;:· '´ ¯¯  `' ·-:::/'            ,'´          '`:;::`,        '\                       '`;::'i‘  
+ |         'i::i  i         'i:';°      /                `;::\           /.'´      _         '`;/' ‘         /.'´      _         ';/' ‘          /                `;::\         i       i':/:::';       ,:'           `;:::';       ,:'           `;:::';         i       i':/:::';    
+ 'i        i':/_/:';        ;:';°   i'       ,';´'`;         '\:::', ‘  /     /':::::/;::::_::::::::;‘    /     /':::::/;::::_::::::::;‘     i'       ,';´'`;         '\:::', ‘     i       i/:·'´       ,:''      
+  ;       i·´   '`·;       ;:/°  ,'        ;' /´:`';         ';:::'i‘,'     ;':::::'/·´¯     ¯'`·;:::¦‘ ,'     ;':::::'/·´¯`·;:::¦‘  ,'        ;' /´:`';         ';:::'i‘,'     ;':::::'/·´¯     ¯'`·;:::¦‘  ,'        ;' /´:`';         ';:::'i‘     '; '    ,:,     ~;'´:::'`:,   
+  ';      ;·,  '  ,·;      ;/'    ;        ;/:;::;:';         ',:::;'i     ';::::::'\             ';:';‘ 'i     ';::::::'\             ';:';‘  ;        ;/:;::;:';         ',:::;     'i      i:/\       `;::::/:'`;'
+   ';    ';/ '`'*'´  ';    ';/' '‘  'i        '´        `'         'i::'/ ;      '`·:;:::::`'*;:'´      |/'   ;      '`·:;:::::`'*;:'´      |/'  'i        '´        `'         'i::'/      ;     ;/   \       '`:/::::/'
+    \   /          '\   '/'      ¦       '/`' *^~-·'´\         ';'/'‚  \          '`*^*'´         /'  ‘   \          '`*^*'´         /'  ‘ ¦       '/`' *^~-·'´\         ';'/'‚      ';   ,'       \         '`;/ 
+     '`'´             `''´   '    '`., .·´              `·.,_,.·´  ‚    `·.,               ,.-·´          `·.,               ,.-·´      '`., .·´              `·.,_,.·´  ‚       `'*´          '`~·-·^'´    
+                      '                                                    '`*^~·~^*'´                     '`*^~·~^*'´                                                                                
+    """
     for i in range(len(colors)):
         sys.stdout.write("\r" + colors[i] + header)
         sys.stdout.flush()
@@ -126,14 +134,55 @@ def perform_sql_injection(target_url, results_dir):
                 file.write(response.text)
             print(f"Saved SQL Injection results to {output_file}")
             file_count += 1
-        except requests.RequestException as e:
-            print(f"An error occurred: {e}")
+                Exception as e:
+            print(f"An error occurred during SQL Injection attempt: {e}")
 
-if __name__ == "__main__":
+def perform_ftp_scan(target_url, results_dir):
+    """Perform an FTP scan on the target URL."""
+    global file_count  # Declare file_count as global
+    command = ["nmap", "-p", "21", "--script", "ftp-anon,ftp-bounce,ftp-libopie,ftp-proftpd-backdoor,ftp-vsftpd-backdoor,ftp-vuln-cve2010-4221", target_url]
+    
+    try:
+        stdout, stderr = run_command(command)
+        output_file = os.path.join(results_dir, f'ftp_scan_{file_count}.txt')
+        with open(output_file, 'w') as file:
+            file.write(stdout)
+            if stderr:
+                file.write("\nErrors:\n")
+                file.write(stderr)
+        print(f"Saved FTP scan results to {output_file}")
+        file_count += 1
+    except Exception as e:
+        print(f"An error occurred during FTP scan: {e}")
+
+def main():
     clear_screen()
     print_header()
+    
+    # Install necessary tools
     install_tools()
+    
+    # Ask for the target URL
     target_url = input("Enter the target URL: ")
-    results_dir = "results"
+    
+    # Check if the website is accessible
+    if not check_website_status(target_url):
+        print("Exiting the script due to inaccessible target URL.")
+        return
+    
+    # Create a directory to save the results
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    results_dir = os.path.join(os.getcwd(), f"scan_results_{timestamp}")
     os.makedirs(results_dir, exist_ok=True)
+    
+    # Perform SQL Injection scan
     perform_sql_injection(target_url, results_dir)
+    
+    # Perform FTP scan
+    perform_ftp_scan(target_url, results_dir)
+    
+    print("Scan completed.")
+
+if __name__ == "__main__":
+    main()
+

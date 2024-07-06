@@ -140,7 +140,7 @@ def log_to_database(host, user, password, db, data):
         print(f"Error logging to database: {e}")
 
 def main():
-    """Main function to orchestrate the scans."""
+    "Main function to orchestrate the scans."
     clear_screen()
     print_header()
     

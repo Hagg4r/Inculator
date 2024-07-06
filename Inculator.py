@@ -59,7 +59,7 @@ def clear_screen():
     os.system('cls' if os.name == 'nt' else 'clear')
 
 def print_header():
-    """Print the animated header 'hagg4rscan'."""
+    """Print the animated header."""
     colors = ['\033[91m', '\033[93m', '\033[92m', '\033[94m', '\033[95m', '\033[96m']
     header = """
     ,:'/¯/`:,       .·/¯/`:,'                ,.-:~:-.                             __'                              __'                          ,.-:~:-.                .:'/*/'`:,·:~·–:.,           
@@ -68,13 +68,21 @@ def print_header():
  ;         ';:';  ;         ';:;        ,'´          '`:;::`,              /;:· '´ ¯¯  `' ·-:::/'            /;:· '´ ¯¯  `' ·-:::/'            ,'´          '`:;::`,        '\                       '`;::'i‘  
  |         'i::i  i         'i:';°      /                `;::\           /.'´      _         '`;/' ‘         /.'´      _         ';/' ‘          /                `;::\         i       i':/:::';       ,:'        
  'i        i':/_/:';        ;:';°   i'       ,';´'`;         '\:::', ‘  /     /':::::/;::::_::::::::;‘    /     /':::::/;::::_::::::::;‘     i'       ,';´'`;         '\:::', ‘     i       i/:·'´       ,:'      
-  ;       i·´   '`·;       ;:/°  ,'        ;' /´:`';         ';:::'i‘,'     ;':::::'/·´¯     ¯'`·;:::¦‘ ,'     ;':::::'/·´¯`·;:::¦‘`;   ,'        ,;::/'`·.,_'     
-   'i     i         i';   ,'´             ,:/'¯/'`·:':::';'      \::'·´,'::':,'        ;:::::/´  ;          ;:::::/´   i'::':/´  ;            ;:::::/´    ;::::/´'`·,'´':,
-   """
+  ;       i·´   '`·;       ;:/°  ,'        ;' /´:`';         ';:::'i‘,'     ;':::::'/·´¯     ¯'`·;:::¦‘ ,'     ;':::::'/·´¯`·;:::¦‘  ,'        ;' /´:`';         ';:::'i‘    ,:,     ~;'´:::'`:,   
+  ;'       ;·,  '  ,·;      ;/'    ;        ;/:;::;:';         ',:::;'i     ';::::::'\             ';:';‘ i     ';::::::'\             ';:';‘  ;        ;/:;::;:';         ',::;'    ,'              `;::::/:'`;
+   ';    ';/ '`'
 
+*'´  ';    ';/'    'i        '´        `'         'i:::'/ ;  '`·:;:::::`'*
+
+;:'´      |/'   ;      '`·:;:::::`'*;:'´      |/'  'i        '´        `'         'i:::/     ;   ,'    '`:/::::/'
+    \   /          '\   \/'       ','       '/`' *^~-·'´\\         ;/'‘  \          '`*^*'´         /'   \          '`*^*'´         /'  ‘ ;         '´'*^~-·'´\\         ';    '' ,'       \          '';'
+     '`'´             `''´   '    '`., .·´              `·.,_,.·´  ‚    `·.,               ,.-·´          `·.,               ,.-·´     '`., .·´              `·.,_,.·´  ‚       `'*´          '`~·-·^'´    
+                      '                                                    '`*^~·~^*'´                     '`*^~·~^*'´                                                                                
+    """
     for color in colors:
         print(color + header)
         time.sleep(0.5)
+    print("\033[0m")  # Reset color to default
 
 def get_ip_info(ip):
     """Get IP information using an external service."""
@@ -153,6 +161,7 @@ def log_to_database(host, user, password, db, data):
         connection.commit()
         cursor.close()
         connection.close()
+        print("Data logged to database successfully.")
     except pymysql.MySQLError as e:
         print(f"Error logging to database: {e}")
 
@@ -174,38 +183,43 @@ def main():
     # Run scans
     print("\n[1] Running Uniscan...")
     uniscan_stdout, uniscan_stderr = scan_with_uniscan(target)
-    print(uniscan_stdout)
+    if uniscan_stdout:
+        print(uniscan_stdout)
     if uniscan_stderr:
         print(f"Uniscan errors:\n{uniscan_stderr}")
 
     print("\n[2] Running Nmap...")
     nmap_stdout, nmap_stderr = scan_with_nmap(target)
-    print(nmap_stdout)
+    if nmap_stdout:
+        print(nmap_stdout)
     if nmap_stderr:
         print(f"Nmap errors:\n{nmap_stderr}")
 
     print("\n[3] Running SQLMap...")
-        print("\n[3] Running SQLMap...")
     sqlmap_stdout, sqlmap_stderr = scan_with_sqlmap(target)
-    print(sqlmap_stdout)
+    if sqlmap_stdout:
+        print(sqlmap_stdout)
     if sqlmap_stderr:
         print(f"SQLMap errors:\n{sqlmap_stderr}")
 
     print("\n[4] Extracting files from database with SQLMap...")
     file_extraction_stdout, file_extraction_stderr = extract_files_from_db(target)
-    print(file_extraction_stdout)
+    if file_extraction_stdout:
+        print(file_extraction_stdout)
     if file_extraction_stderr:
         print(f"File extraction errors:\n{file_extraction_stderr}")
 
     print("\n[5] Running Whois...")
     whois_stdout, whois_stderr = run_whois(target)
-    print(whois_stdout)
+    if whois_stdout:
+        print(whois_stdout)
     if whois_stderr:
         print(f"Whois errors:\n{whois_stderr}")
 
     print("\n[6] Running Subfinder...")
     subfinder_stdout, subfinder_stderr = run_subfinder(target)
-    print(subfinder_stdout)
+    if subfinder_stdout:
+        print(subfinder_stdout)
     if subfinder_stderr:
         print(f"Subfinder errors:\n{subfinder_stderr}")
 

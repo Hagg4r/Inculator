@@ -112,7 +112,7 @@ def extract_files_from_db(target):
     """Extract files from a database using SQLMap."""
     # Adjust the command to specify the file extraction options
     command = [
-        "sqlmap", "-u", target, "--batch", "--database", "--output-dir=output",
+        "sqlmap", "-u", target, "--batch", "--dbs", "--output-dir=output",
         "--technique=BEUSTQ", "--files"  # Modify options based on what you need
     ]
     stdout, stderr = run_command(command)

@@ -1,6 +1,4 @@
 print("by Hagg4r 👺")
-Here is the modified code with the added functionality to perform an FTP scan after the SQL injection scan:
-```
 import os
 import subprocess
 import requests

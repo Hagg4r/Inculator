@@ -87,7 +87,7 @@ def get_ip_info(ip):
 
 def scan_with_uniscan(target):
     """Run Uniscan on the target."""
-    command = ["uniscan", "-u", target, "-qweds"]
+    command = ["uniscan", "-u", target]
     stdout, stderr = run_command(command)
     save_to_file("uniscan_results.txt", stdout)
     if stderr:
@@ -96,7 +96,7 @@ def scan_with_uniscan(target):
 
 def scan_with_nmap(target):
     """Run Nmap on the target."""
-    command = ["nmap", "-sV", target]
+    command = ["nmap", "-v", target]
     stdout, stderr = run_command(command)
     save_to_file("nmap_results.txt", stdout)
     if stderr:
@@ -178,9 +178,7 @@ def main():
     subfinder_stdout, subfinder_stderr = run_subfinder(target)
     print(subfinder_stdout)
     
-    print("\n[6] Getting IP information...")
-    ip_info = get_ip_info(target)
-    print(ip_info)
+    
     
     # Log results to the database
     db_host = "localhost"

@@ -1,10 +1,8 @@
-print("Hagg4r 👺")
 import os
 import subprocess
 import requests
 from requests.exceptions import RequestException, SSLError
 from datetime import datetime
-import pymysql
 import urllib3
 import time
 import sys
@@ -173,6 +171,11 @@ def main():
         perform_sqlmap_scan(target_url, results_dir)
     else:
         print("The website is not accessible. Exiting...")
+
+    # Adding the link at the end of the script
+    link = "http://example.com/report"
+    with open("result_summary.txt", 'a') as file:
+        file.write(f"\nPlease refer to the following link for the detailed report: {link}\n")
 
 if __name__ == "__main__":
     main()

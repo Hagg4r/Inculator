@@ -1,4 +1,4 @@
-
+print("by haggar")
 import os
 import subprocess
 import requests
@@ -68,7 +68,7 @@ def print_header():
  \ \_\  \ \_\\"\_\  \ \_____\  \ \_____\  \ \_____\  \ \_\ \_\    \ \_\  \ \_____\  \ \_\ \_\    
   \/_/   \/_/ \/_/   \/_____/   \/_____/   \/_____/   \/_/\/_/     \/_/   \/_____/   \/_/ /_/    
                                                                                                  
-    """ print("by haggar) 
+    """ 
     for i in range(len(colors)):
         sys.stdout.write("\r" + colors[i] + header)
         sys.stdout.flush()

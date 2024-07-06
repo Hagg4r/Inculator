@@ -66,16 +66,11 @@ def print_header():
   /:/_/::::/';    /:/_/::::';             /':::::::::'`,                    ,.·:'´::::::::`'·-.                ,.·:'´::::::::`'·-.                 /':::::::::'`,             /::/:/:::/:::;::::::/`':.,'     
  /:'     '`:/::;  /·´    `·,::';          /;:-·~·-:;':::',                 '/::::::::::::::::::';             '/::::::::::::::::::';              /;:-·~·-:;':::',          /·*'`·´¯'`^·-~·:–-'::;:::'`;    
  ;         ';:';  ;         ';:;        ,'´          '`:;::`,              /;:· '´ ¯¯  `' ·-:::/'            /;:· '´ ¯¯  `' ·-:::/'            ,'´          '`:;::`,        '\                       '`;::'i‘  
- |         'i::i  i         'i:';°      /                `;::\           /.'´      _         '`;/' ‘         /.'´      _         ';/' ‘          /                `;::\         i       i':/:::';       ,:'           `;:::';       ,:'           `;:::';         i       i':/:::';    
- 'i        i':/_/:';        ;:';°   i'       ,';´'`;         '\:::', ‘  /     /':::::/;::::_::::::::;‘    /     /':::::/;::::_::::::::;‘     i'       ,';´'`;         '\:::', ‘     i       i/:·'´       ,:''      
-  ;       i·´   '`·;       ;:/°  ,'        ;' /´:`';         ';:::'i‘,'     ;':::::'/·´¯     ¯'`·;:::¦‘ ,'     ;':::::'/·´¯`·;:::¦‘`;  ,'`;      ,'        `,'        ;
-                                                                      
-"""
-
-    for color in colors:
-        clear_screen()
-        print(color + header + '\033[0m')
-        time.sleep(0.2)
+ |         'i::i  i         'i:';°      /                `;::\           /.'´      _         '`;/' ‘         /.'´      _         ';/' ‘          /                `;::\         i       i':/:::';       ,:'        
+ 'i        i':/_/:';        ;:';°   i'       ,';´'`;         '\:::', ‘  /     /':::::/;::::_::::::::;‘    /     /':::::/;::::_::::::::;‘     i'       ,';´'`;         '\:::', ‘     i       i/:·'´       ,:'      
+  ;       i·´   '`·;       ;:/°  ,'        ;' /´:`';         ';:::'i‘,'     ;':::::'/·´¯     ¯'`·;:::¦‘ ,'     ;':::::'/·´¯`·;:::¦‘`;   ,'        ,;::/'`·.,_'     
+   'i     i         i';   ,'´             ,:/'¯/'`·:':::';'      \::'·´,'::':,'        ;:::::/´  ;          ;:::::/´   i'::':/´  ;            ;:::::/´   ;::'`·:,'/'`·.   
+    ;   ;'        ;'   ,'´  ,'´  ;'´  `;::'/´  ;             ,'`·:'       'i:::;     ;':::::/´  ;'            ;':::::/´    ';:::;´  ;              ;':::::/´    ;::::/´'`·,'´':,
 
 def get_ip_info(ip):
     """Get IP information using an external service."""
@@ -178,19 +173,17 @@ def main():
     ip_info = get_ip_info(target)
     print(ip_info)
     
-    # Log results to the database (example usage)
+    # Log results to the database
     db_host = "localhost"
     db_user = "root"
     db_password = "password"
     db_name = "scan_results_db"
     
-    log_to_database(db_host, db_user, db_password, db_name, uniscan_stdout)
-    log_to_database(db_host, db_user, db_password, db_name, nmap_stdout)
+     log_to_database(db_host, db_user, db_password, db_name, nmap_stdout)
     log_to_database(db_host, db_user, db_password, db_name, sqlmap_stdout)
     log_to_database(db_host, db_user, db_password, db_name, whois_stdout)
     log_to_database(db_host, db_user, db_password, db_name, subfinder_stdout)
-    log_to_database(db_host, db_user, db_password, db_name) 
     log_to_database(db_host, db_user, db_password, db_name, str(ip_info))
-
+    
 if __name__ == "__main__":
     main()

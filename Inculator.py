@@ -1,7 +1,4 @@
 print("Hagg4r 👺")
-Here is the complete script with all the functionalities integrated:
-
-```python
 import os
 import subprocess
 import requests

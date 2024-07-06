@@ -1,5 +1,4 @@
-Sure, I'll modify the `print_header` function to cycle through different colors for the existing ASCII art without changing the content. Here's the updated code:
-```
+
 import os
 import subprocess
 import requests

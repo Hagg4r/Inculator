@@ -68,7 +68,7 @@ def print_header():
  ;         ';:';  ;         ';:;        ,'´          '`:;::`,              /;:· '´ ¯¯  `' ·-:::/'            /;:· '´ ¯¯  `' ·-:::/'            ,'´          '`:;::`,        '\                       '`;::'i‘  
  |         'i::i  i         'i:';°      /                `;::\           /.'´      _         '`;/' ‘         /.'´      _         ';/' ‘          /                `;::\         i       i':/:::';       ,:'           `;:::';       ,:'           `;:::';         i       i':/:::';    
  'i        i':/_/:';        ;:';°   i'       ,';´'`;         '\:::', ‘  /     /':::::/;::::_::::::::;‘    /     /':::::/;::::_::::::::;‘     i'       ,';´'`;         '\:::', ‘     i       i/:·'´       ,:''      
-  ;       i·´   '`·;       ;:/°  ,'        ;' /´:`';         ';:::'i‘,'     ;':::::'/·´¯     ¯'`·;:::¦‘ ,'     ;':::::'/·´¯`·;:::¦‘`;  ,'        ;' /´:`';         ';:::'i‘     '; '    ,:,     ~;'´:::'`:,   
+  ;       i·´   '`·;       ;:/°  ,'        ;' /´:`';         ';:::'i‘,'     ;':::::'/·´¯     ¯'`·;:::¦‘ ,'     ;':::::'/·´¯`·;:::¦‘`;  ,'        ;' /´`;         ';:::'i‘     '; '    ,:,     ~;'´:::'`:,   
   ';    ';/ '`'*'´  ';    ';/' '‘  'i        '´        `'         'i::'/ ;      '`·:;:::::`'*;:'´      |/'   ;      '`·:;:::::`'*;:'´      |/'  'i        '´        `'         'i::'/      ;     ;/   \       '`:/::::/'
     \   /          '\   '/'      ¦       '/`' *^~-·'´\         ';'/'‚  \          '`*^*'´         /'  ‘   \          '`*^*'´         /'  ‘ ¦       '/`' *^~-·'´\         ';'/'‚      ';   ,'       \         '`;/ 
      '`'´             `''´   '    '`., .·´              `·.,_,.·´  ‚    `·.,               ,.-·´          `·.,               ,.-·´      '`., .·´              `·.,_,.·´  ‚       `'*´          '`~·-·^'´    
@@ -77,7 +77,7 @@ def print_header():
     for i in range(len(colors)):
         sys.stdout.write("\r" + colors[i] + header)
         sys.stdout.flush()
-        time.sleep(0.5)
+        time.sleep(0.1)
     print("\033[0m")  # Reset color to default
 
 def check_website_status(url):
@@ -141,7 +141,7 @@ def perform_ftp_scan(target_url, results_dir):
     
     try:
         stdout,stderr = run_command(command)
-    output_file = os.path.join(results_dir, f'ftp_scan_{file_count}.txt')
+    output_fileoutput_file = os.path.join(results_dir, f'ftp_scan_{file_count}.txt')
     with open(output_file, 'w') as file:
         file.write(stdout)
     print(f"Saved FTP scan results to {output_file}")

